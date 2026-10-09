@@ -1,0 +1,55 @@
+name: Windows build and release
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Version
+        shell: pwsh
+        run: |
+          $version = '0.4.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') { $version = $env:GITHUB_REF_NAME.TrimStart('v') }
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+      - name: Build
+        shell: pwsh
+        run: ./scripts/build.ps1 -Version $env:APP_VERSION
+      - name: Test logic and Windows rendering
+        shell: pwsh
+        run: ./scripts/test.ps1
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'innosetup.exe'
+          Invoke-WebRequest 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe' -OutFile $installer
+          if ((Get-AuthenticodeSignature $installer).Status -ne 'Valid') { throw 'Invalid Inno Setup signature' }
+          $toolDir = Join-Path $env:RUNNER_TEMP 'inno'
+          $args = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /NOICONS /DIR="' + $toolDir + '"'
+          $process = Start-Process $installer -ArgumentList $args -PassThru -Wait
+          if ($process.ExitCode -ne 0) { throw 'Inno Setup install failed' }
+          "INNO_ISCC=$toolDir/ISCC.exe" >> $env:GITHUB_ENV
+      - name: Installer and portable archive
+        shell: pwsh
+        run: ./scripts/package.ps1 -Version $env:APP_VERSION -Iscc $env:INNO_ISCC
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: windows-${{ env.APP_VERSION }}
+          path: dist/*
+          if-no-files-found: error
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME (Get-ChildItem dist -File).FullName --title "X / WHIP $env:GITHUB_REF_NAME" --notes-file RELEASE-NOTES.md

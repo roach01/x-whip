@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f1e9">
+  <meta name="description" content="X / WHIP，一个在你桌面闲逛、到点催你上 X、下班先躺平的小应用。真人大头，火柴人身子，六档脾气。">
+  <meta property="og:title" content="X / WHIP — 桌面很小，脾气很大。">
+  <meta property="og:description" content="自己到处闲逛，却总催你上 X 的桌面小闲人。">
+  <meta property="og:image" content="https://roach01.github.io/x-whip/assets/rage-levels.png">
+  <title>X / WHIP — 桌面很小，脾气很大。</title>
+  <link rel="icon" href="assets/app.ico">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">跳到正文</a>
+  <div class="page">
+    <header class="masthead">
+      <a class="wordmark" href="#top" aria-label="X / WHIP 首页">X <span>/</span> WHIP</a>
+      <nav aria-label="页面导航">
+        <a href="#temper">看看脾气</a>
+        <a href="#off-duty">下班躺平</a>
+        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>下载 ↗</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">一个住在 Windows 桌面上的小闲人</p>
+          <h1 id="hero-title">你先刷 <span class="latin">X</span>。<br>他才肯收手。</h1>
+          <p class="lede">真人大头，火柴人身子。<br>自己到处闲逛，却总催你去营业。</p>
+          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>领回桌面 <span aria-hidden="true">↗</span></a>
+          <p class="download-note">Windows 安装版 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.4.0.zip">也有解压即用的便携版 ↗</a></p>
+        </div>
+        <div class="pet-stage">
+          <div class="stage-note"><span class="scribble-arrow" aria-hidden="true">↙</span> 点一下，他就怂。</div>
+          <div class="pet-bubble" id="pet-bubble" role="status" aria-live="polite" hidden></div>
+          <button class="pet" id="pet" data-mood="0" aria-label="点击安抚桌面宠物">
+            <svg class="pet-body" viewBox="0 0 340 440" aria-hidden="true">
+              <ellipse class="ground" cx="177" cy="404" rx="65" ry="8" />
+              <g class="stick-lines">
+                <path d="M177 230 L177 324" />
+                <g class="leg leg-left"><path d="M177 324 L157 360 L143 395 L128 396" /></g>
+                <g class="leg leg-right"><path d="M177 324 L197 360 L212 395 L227 396" /></g>
+                <g class="arms-idle"><path d="M171 252 L149 279 L134 292 M183 252 L207 277 L221 291" /></g>
+                <g class="arms-whip"><path d="M171 252 L146 280 L158 294 M183 252 L211 264 L230 243" />
+                  <path class="whip-handle" d="M226 250 L237 230" />
+                  <path class="whip-rope" d="M237 230 C337 94 400 208 284 357" />
+                </g>
+              </g>
+              <g class="impact"><path d="M282 349 L304 363 M273 359 L281 384 M289 339 L311 332" /><text x="258" y="329">啪!</text></g>
+            </svg>
+            <span class="pet-head" aria-hidden="true"></span>
+          </button>
+          <p class="pet-caption"><span class="tiny-dot"></span> 大头负责表情。小身子负责闹。</p>
+        </div>
+      </section>
+
+      <section class="temper" id="temper" aria-labelledby="temper-title">
+        <div class="section-intro">
+          <p class="eyebrow">六档脾气 · 点数字试试</p>
+          <h2 id="temper-title">越催越上头。<br>你负责叫停。</h2>
+        </div>
+        <div class="level-picker" role="group" aria-label="预览六档暴躁程度">
+          <button type="button" data-level="1" aria-pressed="false"><span>01</span>礼貌提醒</button>
+          <button type="button" data-level="2" aria-pressed="false"><span>02</span>眉头一皱</button>
+          <button type="button" data-level="3" aria-pressed="false"><span>03</span>有点急了</button>
+          <button type="button" data-level="4" aria-pressed="false"><span>04</span>手舞足蹈</button>
+          <button type="button" data-level="5" aria-pressed="false"><span>05</span>甩出残影</button>
+          <button type="button" data-level="6" aria-pressed="false"><span>06</span>火星级发疯</button>
+        </div>
+        <figure class="app-demo">
+          <video controls playsinline preload="none" poster="assets/rage-levels.png" aria-label="X / WHIP 六档动作演示">
+            <source src="assets/demo.mp4" type="video/mp4">
+            你的浏览器暂时无法播放演示视频。
+          </video>
+          <figcaption>六档动作演示。点宠物，立刻收手。</figcaption>
+        </figure>
+      </section>
+
+      <section class="rhythm" aria-labelledby="rhythm-title">
+        <div class="rhythm-heading">
+          <h2 id="rhythm-title">15 分钟，<br>一场小型心理活动。</h2>
+          <p>他先摸鱼，再盯你，最后热鞭子。<br>到点开始一鞭一鞭地催。<br>你点他一下，他立刻收手，重新冷却。<br>左键每点一次，今日完成 +1。<br>北京时间零点清零，拖动不算。</p>
+        </div>
+        <div class="timeline" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <ol class="stages">
+          <li><span class="stage-time">0—8 min</span><h3>摸鱼</h3><p>走走停停，表情管理良好。</p></li>
+          <li><span class="stage-time">8—12 min</span><h3>盯你</h3><p>不说话，也能感觉到目光。</p></li>
+          <li><span class="stage-time">12—14 min</span><h3>催促</h3><p>开始坐不住，眉头也坐不住。</p></li>
+          <li><span class="stage-time">14—15 min</span><h3>蓄力</h3><p>还有一分钟。手已经痒了。</p></li>
+        </ol>
+        <p class="small-note">默认 15 分钟。冷却时间可以设成 1–180 分钟。</p>
+      </section>
+
+      <section class="off-duty" id="off-duty" aria-labelledby="off-duty-title">
+        <div class="off-duty-copy">
+          <p class="eyebrow">他也讲劳动法，至少对自己讲。</p>
+          <h2 id="off-duty-title">下班。<br>火星明天再说。</h2>
+          <p>一到下班时间，戴墨镜，躺下。<br>默认不催。想逗他，下班也能右键试抽。<br>点一下收鞭，再躺回去。<br>第二天上班，再给你完整一轮冷却。</p>
+          <p class="small-note">默认北京时间 09:00–18:00。<br>你可以改时间、设夜班，也可以手动宣布今日下班。</p>
+        </div>
+        <img src="assets/off-duty.png" alt="真人大头火柴人戴着墨镜，舒服地躺在躺椅上，已下班。" width="480" height="440" loading="lazy">
+      </section>
+
+      <section class="your-call" aria-labelledby="your-call-title">
+        <h2 id="your-call-title">脾气归他。<br>开关归你。</h2>
+        <div class="your-call-copy">
+          <p><strong>想安静一点？</strong><br>提示音可以关。4–6 级的轻抖动也可以关，不用被闪屏吓一跳。台词偶尔冒出来，说完就走。</p>
+          <p><strong>想清净一点？</strong><br>卡皮芭拉好友推荐也能关。宠物大小、左右闲逛、上下班时间，都在右键设置里。</p>
+          <p class="small-note">他只负责催。关注、发帖、评论，还是你亲自在 X 里做。</p>
+        </div>
+      </section>
+
+      <section class="take-home" aria-labelledby="take-home-title">
+        <div><p class="eyebrow">桌面很小，脾气很大。</p><h2 id="take-home-title">给他找个桌面。</h2></div>
+        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
+      </section>
+    </main>
+
+    <footer>
+      <p class="wordmark">X <span>/</span> WHIP</p>
+      <a href="https://x.com/oh_roach" target="_blank" rel="noopener noreferrer">有空看看好友卡皮芭拉 ↗</a>
+      <a href="https://github.com/roach01/x-whip" target="_blank" rel="noopener noreferrer">源码在 GitHub ↗</a>
+      <a href="#top">回到上面 ↑</a>
+    </footer>
+  </div>
+</body>
+</html>
