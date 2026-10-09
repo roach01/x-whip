@@ -3,129 +3,60 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f1e9">
-  <meta name="description" content="X / WHIP，陪你带薪刷 X 的桌面搭子。关注、发帖、回复，做完点一下记一笔。真人大头，六档脾气，八组抽鞭事故。">
-  <meta property="og:title" content="X / WHIP — 上班。摸鱼。刷 X。">
-  <meta property="og:description" content="你刷 X，他在桌角陪着。一个非正式上班搭子。">
-  <meta property="og:image" content="https://roach01.github.io/x-whip/assets/rage-levels.png?v=0.6.0">
-  <title>X / WHIP — 上班。摸鱼。刷 X。</title>
+  <meta name="theme-color" content="#fcfcfa">
+  <meta name="description" content="X / WHIP，一个催你带薪刷 X 的 Windows 桌面宠物。定时提醒关注、发帖、回复，做完点一下，今日记录 +1。">
+  <meta property="og:title" content="X / WHIP — 带薪刷 X，别只划过去。">
+  <meta property="og:description" content="你负责摸鱼，他负责急眼。做完点他一下，今日记录 +1。">
+  <meta property="og:image" content="https://roach01.github.io/x-whip/assets/demo-poster.png">
+  <title>X / WHIP — 带薪刷 X，别只划过去。</title>
   <link rel="icon" href="assets/app.ico">
-  <link rel="stylesheet" href="style.css?v=0.6.0">
-  <script src="app.js?v=0.6.0" defer></script>
+  <link rel="stylesheet" href="style.css?v=minimal-1">
 </head>
-<body id="top">
+<body>
   <a class="skip-link" href="#main">跳到正文</a>
   <div class="page">
-    <header class="masthead">
-      <a class="wordmark" href="#top" aria-label="X / WHIP 首页">X <span>/</span> WHIP</a>
-      <nav aria-label="页面导航">
-        <a href="#desk">工位试玩</a>
-        <a href="#temper">脾气表</a>
-        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>下载 ↗</a>
-      </nav>
+    <header class="header">
+      <a class="wordmark" href="./" aria-label="X / WHIP 首页">X / WHIP</a>
+      <a class="source-link" href="https://github.com/roach01/x-whip" target="_blank" rel="noopener noreferrer">GitHub <span aria-hidden="true">↗</span></a>
     </header>
-
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">非正式上班搭子 / Windows 桌面宠物</p>
-          <h1 id="hero-title">上班。<br><span class="fish-word">摸鱼。</span><br>刷 <span class="latin">X</span>。</h1>
-          <p class="lede">你刷 X，他在桌角陪着。<br>关注、发帖、回复，别光看热闹。<br>做完点他一下，留个记号。</p>
-          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>把搭子放到桌面 <span aria-hidden="true">↗</span></a>
-          <p class="download-note">无需 X 登录 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.6.0.zip">便携版，解压即用 ↗</a></p>
-        </div>
-        <div class="desk-paper" id="desk">
-          <div class="desk-heading"><span>工位观察记录</span><span>NO. 001</span></div>
-          <div class="pet-stage">
-          <div class="ink-stamp" aria-hidden="true">本人在岗<br>精神出差</div>
-          <div class="stage-note">↓ 点大头，记一笔。</div>
-          <div class="pet-bubble" id="pet-bubble" role="status" aria-live="polite" hidden></div>
-          <button class="pet" id="pet" data-mood="0" aria-label="点击宠物，记录一笔网页试玩并安抚">
-            <svg class="pet-body" viewBox="0 0 340 440" aria-hidden="true">
-              <ellipse class="ground" cx="177" cy="404" rx="65" ry="8" />
-              <g class="stick-lines">
-                <path d="M177 230 L177 324" />
-                <g class="leg leg-left"><path d="M177 324 L157 360 L143 395 L128 396" /></g>
-                <g class="leg leg-right"><path d="M177 324 L197 360 L212 395 L227 396" /></g>
-                <g class="arms-idle"><path d="M171 252 L149 279 L134 292 M183 252 L207 277 L221 291" /></g>
-              </g>
-            </svg>
-            <span class="pet-head" aria-hidden="true"></span>
-          </button>
+          <p class="eyebrow">一个催你摸鱼的桌面宠物</p>
+          <h1 id="hero-title">带薪刷 X，<br>别只划过去。</h1>
+          <p class="intro">马斯克住在桌角，定时催你关注、发帖、回复。<br class="desktop-break">你负责摸鱼，他负责急眼。</p>
+          <p class="purpose">做完点他一下，今日记录 +1。</p>
+          <div class="actions">
+            <a class="download" href="https://github.com/roach01/x-whip/releases/download/v0.6.0/XWhipSetup-0.6.0.exe">下载 Windows 版 <span aria-hidden="true">↓</span></a>
+            <a class="demo-link" href="#demo">看看他怎么抽 <span aria-hidden="true">↘</span></a>
           </div>
-          <div class="desk-ledger">
-            <div class="demo-total"><span>本页记了</span><output id="demo-count" aria-live="polite">00</output><span>笔</span></div>
-            <div class="ledger-lines"><p>最近三笔 / 北京时间</p><ol id="demo-log"><li class="empty-log">还没记。点一下大头试试。</li></ol></div>
-          </div>
-          <div class="record-actions" role="group" aria-label="网页手动试玩记录">
-            <button type="button" data-record="关注">关注过了 <span>+</span></button>
-            <button type="button" data-record="发帖">发帖过了 <span>+</span></button>
-            <button type="button" data-record="回复">回复过了 <span>+</span></button>
-          </div>
-          <p class="demo-note">仅网页试玩，刷新归零。与桌面应用的数据分开。<br>这些按钮只记一笔，不会在 X 上执行任何动作。</p>
+          <p class="download-meta">Windows 10 / 11 · v0.6.0 <span aria-hidden="true">/</span> <a href="https://github.com/roach01/x-whip/releases/download/v0.6.0/XWhip-Portable-0.6.0.zip">便携版</a></p>
         </div>
-      </section>
-
-      <section class="temper" id="temper" aria-labelledby="temper-title">
-        <div class="section-intro">
-          <p class="eyebrow">六档表情 · 点数字换脸</p>
-          <h2 id="temper-title">一开始好说话。<br>后来好大一张脸。</h2>
-          <p class="small-note">数字只试表情。真实抽鞭看下面。</p>
-        </div>
-        <div class="level-picker" role="group" aria-label="预览六档暴躁表情">
-          <button type="button" data-level="1" aria-pressed="false"><span>01</span>文明提醒</button>
-          <button type="button" data-level="2" aria-pressed="false"><span>02</span>稍微催催</button>
-          <button type="button" data-level="3" aria-pressed="false"><span>03</span>有点急了</button>
-          <button type="button" data-level="4" aria-pressed="false"><span>04</span>坐不住了</button>
-          <button type="button" data-level="5" aria-pressed="false"><span>05</span>残影出场</button>
-          <button type="button" data-level="6" aria-pressed="false"><span>06</span>彻底上头</button>
-        </div>
-        <figure class="app-demo">
-          <video controls playsinline preload="none" poster="assets/rage-levels.png?v=0.6.0" aria-label="X / WHIP 三幕抽鞭事故实录：反抽自己、缠脚、挂上 X 牌">
-            <source src="assets/whip-gags.mp4?v=0.6.0" type="video/mp4">
-            你的浏览器暂时无法播放演示视频。
-          </video>
-          <figcaption><strong>鞭子只有一根。事故不止一种。</strong>反抽自己，脚被缠住，最后还被鞭子挂上 X 牌。<br>这是桌面版实际渲染录像。上面的数字只换网页表情，不计入记录。</figcaption>
-          <p class="full-demo-link"><a href="assets/demo.mp4?v=0.6.0" target="_blank" rel="noopener noreferrer">看看完整六级演示 ↗</a></p>
-          <p class="motion-credit">抽鞭灵感来自 <a href="https://github.com/GitFrog1111/OpenWhip" target="_blank" rel="noopener noreferrer">OpenWhip ↗</a>。本应用的动作与绳索自行实现，未复制原作源码。</p>
+        <figure class="product">
+          <img src="assets/pet-preview.png" width="640" height="560" alt="桌面版的马斯克大头火柴人，显示十五分钟冷却和今日记录七次" fetchpriority="high">
+          <figcaption>在桌角，等你下一次摸鱼。</figcaption>
         </figure>
       </section>
-
-      <section class="rhythm" aria-labelledby="rhythm-title">
-        <div class="rhythm-heading">
-          <h2 id="rhythm-title">15 分钟，<br>桌角开始有动静。</h2>
-          <p>他先摸鱼，再盯你，最后热鞭子。<br>到点就催：关注、发帖、回复，别忘了。<br>刷过 X，点他一下：今日记录 +1。<br>收鞭，重新冷却。开着，就一直这么循环。<br>拖动只是搬家，不计数。</p>
+      <ul class="product-points" aria-label="产品核心">
+        <li><strong>定时提醒</strong><span>默认 15 分钟，开着就催。</span></li>
+        <li><strong>越等越暴躁</strong><span>六档脾气，一根鞭子。</span></li>
+        <li><strong>点一次，记一次</strong><span>每日留记录，零点清零。</span></li>
+      </ul>
+      <section class="demo" id="demo" aria-labelledby="demo-title">
+        <div class="demo-heading">
+          <h2 id="demo-title">你再不刷，<br>他就要动手了。</h2>
+          <p>有时，也会抽到他自己。</p>
         </div>
-        <div class="timeline" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-        <ol class="stages">
-          <li><span class="stage-time">0—8 min</span><h3>摸鱼</h3><p>走走停停，表情管理良好。</p></li>
-          <li><span class="stage-time">8—12 min</span><h3>盯你</h3><p>不说话，也能感觉到目光。</p></li>
-          <li><span class="stage-time">12—14 min</span><h3>催促</h3><p>开始坐不住，眉头也坐不住。</p></li>
-          <li><span class="stage-time">14—15 min</span><h3>蓄力</h3><p>还有一分钟。手已经痒了。</p></li>
-        </ol>
-        <p class="small-note">桌面应用只记录每日总次数，北京时间零点清零，同日重启保留。默认冷却 15 分钟，可设 1–180 分钟。</p>
-      </section>
-
-      <section class="your-call" aria-labelledby="your-call-title">
-        <h2 id="your-call-title">脾气归他。<br>开关归你。</h2>
-        <div class="your-call-copy">
-          <p><strong>声音你说了算。</strong><br>挥鞭风声和短脆啪声默认静音，想听再打开。4–6 级的轻抖动可以关，不闪屏。台词偶尔冒出来，说完就走。</p>
-          <p><strong>想清净一点？</strong><br>卡皮芭拉好友推荐也能关。宠物大小、左右闲逛、冷却时长，都在右键设置里。</p>
-          <p class="small-note">无需 X 登录。关注、发帖、回复由你自己做，应用不会读取或代操作账号。左键和右键“完成一次互动”都会记 +1。</p>
-        </div>
-      </section>
-
-      <section class="take-home" aria-labelledby="take-home-title">
-        <div><p class="eyebrow">人在上班。心有搭子。</p><h2 id="take-home-title">现在，桌角见。</h2></div>
-        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
+        <video controls playsinline preload="metadata" poster="assets/demo-poster.png" width="900" height="690" aria-label="七点五秒桌面版演示：反抽自己、缠脚、挂上 X 牌">
+          <source src="assets/whip-gags.mp4?v=0.6.0" type="video/mp4">
+          <p><a href="assets/whip-gags.mp4?v=0.6.0">打开产品演示视频</a></p>
+        </video>
+        <p class="demo-note">桌面版实际画面 · 点击收鞭，重新计时</p>
       </section>
     </main>
-
     <footer>
-      <p class="wordmark">X <span>/</span> WHIP</p>
-      <a href="https://x.com/oh_roach" target="_blank" rel="noopener noreferrer">有空看看好友卡皮芭拉 ↗</a>
-      <a href="https://github.com/roach01/x-whip" target="_blank" rel="noopener noreferrer">源码在 GitHub ↗</a>
-      <a href="#top">回到上面 ↑</a>
+      <p>你刷 X。他负责上头。</p>
+      <p>无需 X 登录 · 手动记录 · 声音、抖动可关闭</p>
     </footer>
   </div>
 </body>
