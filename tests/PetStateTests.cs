@@ -77,7 +77,7 @@ internal static class PetStateTests
         var state = new PetState(15, Start);
         state.TestWhip(Start);
         DateTime now = Start;
-        double[] delays = { 3.2, 2.2, 1.3, 1.1, 0.95, 0.8 };
+        double[] delays = { 3.2, 2.8, 2.4, 2.1, 1.8, 1.55 };
         for (int count = 1; count <= 24; count++)
         {
             Equal(true, state.Tick(now), "strike " + count);
@@ -261,9 +261,9 @@ internal static class PetStateTests
         Equal(PetMode.Whipping, state.Mode, "interval change keeps whipping");
         Equal(16, state.StrikeCount, "interval change keeps strike count");
         Equal(6, state.AngerLevel, "interval change keeps maximum rage");
-        Equal(false, state.Tick(now.AddSeconds(0.8).AddTicks(-1)), "preserved maximum rage delay");
-        Equal(true, state.Tick(now.AddSeconds(0.8)), "next maximum rage strike");
-        state.Calm(now.AddSeconds(1));
-        Equal(TimeSpan.FromMinutes(180), state.Remaining(now.AddSeconds(1)), "new interval used when calmed");
+        Equal(false, state.Tick(now.AddSeconds(1.55).AddTicks(-1)), "preserved maximum rage delay");
+        Equal(true, state.Tick(now.AddSeconds(1.55)), "next maximum rage strike");
+        state.Calm(now.AddSeconds(2));
+        Equal(TimeSpan.FromMinutes(180), state.Remaining(now.AddSeconds(2)), "new interval used when calmed");
     }
 }

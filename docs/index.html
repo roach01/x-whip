@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f1e9">
-  <meta name="description" content="X / WHIP，上班摸鱼刷 X 的桌面搭子。记得关注、发帖、回复，做完点一下记一笔。真人大头火柴人，六档脾气，开着就一直催。">
+  <meta name="description" content="X / WHIP，陪你带薪刷 X 的桌面搭子。关注、发帖、回复，做完点一下记一笔。真人大头，六档脾气，八组抽鞭事故。">
   <meta property="og:title" content="X / WHIP — 上班。摸鱼。刷 X。">
   <meta property="og:description" content="你刷 X，他在桌角陪着。一个非正式上班搭子。">
-  <meta property="og:image" content="https://roach01.github.io/x-whip/assets/rage-levels.png">
+  <meta property="og:image" content="https://roach01.github.io/x-whip/assets/rage-levels.png?v=0.6.0">
   <title>X / WHIP — 上班。摸鱼。刷 X。</title>
   <link rel="icon" href="assets/app.ico">
-  <link rel="stylesheet" href="style.css?v=0.5.0">
-  <script src="app.js?v=0.5.0" defer></script>
+  <link rel="stylesheet" href="style.css?v=0.6.0">
+  <script src="app.js?v=0.6.0" defer></script>
 </head>
 <body id="top">
   <a class="skip-link" href="#main">跳到正文</a>
@@ -21,7 +21,7 @@
       <nav aria-label="页面导航">
         <a href="#desk">工位试玩</a>
         <a href="#temper">脾气表</a>
-        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>下载 ↗</a>
+        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>下载 ↗</a>
       </nav>
     </header>
 
@@ -31,8 +31,8 @@
           <p class="eyebrow">非正式上班搭子 / Windows 桌面宠物</p>
           <h1 id="hero-title">上班。<br><span class="fish-word">摸鱼。</span><br>刷 <span class="latin">X</span>。</h1>
           <p class="lede">你刷 X，他在桌角陪着。<br>关注、发帖、回复，别光看热闹。<br>做完点他一下，留个记号。</p>
-          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>把搭子放到桌面 <span aria-hidden="true">↗</span></a>
-          <p class="download-note">无需 X 登录 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.5.0.zip">便携版，解压即用 ↗</a></p>
+          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>把搭子放到桌面 <span aria-hidden="true">↗</span></a>
+          <p class="download-note">无需 X 登录 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.6.0.zip">便携版，解压即用 ↗</a></p>
         </div>
         <div class="desk-paper" id="desk">
           <div class="desk-heading"><span>工位观察记录</span><span>NO. 001</span></div>
@@ -48,12 +48,7 @@
                 <g class="leg leg-left"><path d="M177 324 L157 360 L143 395 L128 396" /></g>
                 <g class="leg leg-right"><path d="M177 324 L197 360 L212 395 L227 396" /></g>
                 <g class="arms-idle"><path d="M171 252 L149 279 L134 292 M183 252 L207 277 L221 291" /></g>
-                <g class="arms-whip"><path d="M171 252 L146 280 L158 294 M183 252 L211 264 L230 243" />
-                  <path class="whip-handle" d="M226 250 L237 230" />
-                  <path class="whip-rope" d="M237 230 C337 94 400 208 284 357" />
-                </g>
               </g>
-              <g class="impact"><path d="M282 349 L304 363 M273 359 L281 384 M289 339 L311 332" /><text x="258" y="329">啪!</text></g>
             </svg>
             <span class="pet-head" aria-hidden="true"></span>
           </button>
@@ -73,10 +68,11 @@
 
       <section class="temper" id="temper" aria-labelledby="temper-title">
         <div class="section-intro">
-          <p class="eyebrow">六档脾气 · 点数字试试</p>
+          <p class="eyebrow">六档表情 · 点数字换脸</p>
           <h2 id="temper-title">一开始好说话。<br>后来好大一张脸。</h2>
+          <p class="small-note">数字只试表情。真实抽鞭看下面。</p>
         </div>
-        <div class="level-picker" role="group" aria-label="预览六档暴躁程度">
+        <div class="level-picker" role="group" aria-label="预览六档暴躁表情">
           <button type="button" data-level="1" aria-pressed="false"><span>01</span>文明提醒</button>
           <button type="button" data-level="2" aria-pressed="false"><span>02</span>稍微催催</button>
           <button type="button" data-level="3" aria-pressed="false"><span>03</span>有点急了</button>
@@ -85,11 +81,13 @@
           <button type="button" data-level="6" aria-pressed="false"><span>06</span>彻底上头</button>
         </div>
         <figure class="app-demo">
-          <video controls playsinline preload="none" poster="assets/rage-levels.png?v=0.5.0" aria-label="X / WHIP 六档动作演示">
-            <source src="assets/demo.mp4?v=0.5.0" type="video/mp4">
+          <video controls playsinline preload="none" poster="assets/rage-levels.png?v=0.6.0" aria-label="X / WHIP 三幕抽鞭事故实录：反抽自己、缠脚、挂上 X 牌">
+            <source src="assets/whip-gags.mp4?v=0.6.0" type="video/mp4">
             你的浏览器暂时无法播放演示视频。
           </video>
-          <figcaption>六档动作演示。上面的数字只换网页表情，不计入记录。</figcaption>
+          <figcaption><strong>鞭子只有一根。事故不止一种。</strong>反抽自己，脚被缠住，最后还被鞭子挂上 X 牌。<br>这是桌面版实际渲染录像。上面的数字只换网页表情，不计入记录。</figcaption>
+          <p class="full-demo-link"><a href="assets/demo.mp4?v=0.6.0" target="_blank" rel="noopener noreferrer">看看完整六级演示 ↗</a></p>
+          <p class="motion-credit">抽鞭灵感来自 <a href="https://github.com/GitFrog1111/OpenWhip" target="_blank" rel="noopener noreferrer">OpenWhip ↗</a>。本应用的动作与绳索自行实现，未复制原作源码。</p>
         </figure>
       </section>
 
@@ -111,7 +109,7 @@
       <section class="your-call" aria-labelledby="your-call-title">
         <h2 id="your-call-title">脾气归他。<br>开关归你。</h2>
         <div class="your-call-copy">
-          <p><strong>想安静一点？</strong><br>提示音可以关。4–6 级的轻抖动也可以关，不用被闪屏吓一跳。台词偶尔冒出来，说完就走。</p>
+          <p><strong>声音你说了算。</strong><br>挥鞭风声和短脆啪声默认静音，想听再打开。4–6 级的轻抖动可以关，不闪屏。台词偶尔冒出来，说完就走。</p>
           <p><strong>想清净一点？</strong><br>卡皮芭拉好友推荐也能关。宠物大小、左右闲逛、冷却时长，都在右键设置里。</p>
           <p class="small-note">无需 X 登录。关注、发帖、回复由你自己做，应用不会读取或代操作账号。左键和右键“完成一次互动”都会记 +1。</p>
         </div>
@@ -119,7 +117,7 @@
 
       <section class="take-home" aria-labelledby="take-home-title">
         <div><p class="eyebrow">人在上班。心有搭子。</p><h2 id="take-home-title">现在，桌角见。</h2></div>
-        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
+        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
       </section>
     </main>
 

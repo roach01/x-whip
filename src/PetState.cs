@@ -6,7 +6,7 @@ namespace XWhip
 
     public sealed class PetState
     {
-        private static readonly double[] StrikeDelays = { 3.2, 2.2, 1.3, 1.1, 0.95, 0.8 };
+        private static readonly double[] StrikeDelays = { 3.2, 2.8, 2.4, 2.1, 1.8, 1.55 };
         private DateTime nextStrikeUtc;
 
         public int IntervalMinutes { get; private set; }

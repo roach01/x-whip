@@ -137,7 +137,7 @@ namespace XWhip
 
             screenShake = AddCheckBox("屏幕轻轻抖一下", 28, 292, Values.ScreenShakeEnabled);
             screenShake.Width = 224;
-            sound = AddCheckBox("播放抽鞭提示音", 268, 292, Values.Sound);
+            sound = AddCheckBox("播放鞭子音效", 268, 292, Values.Sound);
             sound.Width = 224;
             AddLabel("仅 4–6 级轻轻晃，不闪屏；台词偶尔冒出来。", 28, 324, 464, 20, smallFont, Muted);
             roam = AddCheckBox("闲时在桌面左右移动", 28, 344, Values.Roam);

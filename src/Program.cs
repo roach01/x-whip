@@ -49,7 +49,7 @@ namespace XWhip
                 }
                 board.Save(Path.Combine(folder, "countdown-stages.png"), ImageFormat.Png);
                 string framesFolder = Path.Combine(folder, "frames"); Directory.CreateDirectory(framesFolder);
-                string[] poses = { "叉腰甩", "后仰甩", "双手抡", "弓步抽", "跺脚抽", "跳起抽", "绕身旋转", "自缠踉跄" };
+                string[] poses = { "后肩甩", "弓步横抽", "双手劈下", "跺脚催促", "反抽自己", "拽得一跳", "挂上 X 牌", "缠脚蹦跶" };
                 using (Bitmap gallery = new Bitmap(2400, 880))
                 using (Graphics galleryGraphics = Graphics.FromImage(gallery))
                 using (Font label = new Font("Microsoft YaHei", 14, FontStyle.Bold))
@@ -59,7 +59,7 @@ namespace XWhip
                     for (int n = 0; n < 8; n++)
                     {
                         PetState pose = PreviewStrike(n + 1, start);
-                        using (Bitmap frame = renderer.Render(pose, start, 4, .29, RageQuotes.Lines[n % 6], false, 180))
+                        using (Bitmap frame = PreviewPose(pose, start, .90, RageQuotes.Lines[n % 6]))
                             galleryGraphics.DrawImage(frame, new Rectangle(n % 4 * 600, n / 4 * 440 + 35, 600, 394));
                         galleryGraphics.DrawString((n + 1).ToString("00") + "  " + poses[n], label, ink, n % 4 * 600 + 24, n / 4 * 440 + 5);
                     }
@@ -75,7 +75,7 @@ namespace XWhip
                     for (int level = 1; level <= 6; level++)
                     {
                         PetState pose = PreviewStrike((level - 1) * 3 + 1, start);
-                        using (Bitmap frame = renderer.Render(pose, start, 4, .29, RageQuotes.Lines[(level - 1) % 5], false, 180, false, 1, 0, 7))
+                        using (Bitmap frame = PreviewPose(pose, start, .90, RageQuotes.Lines[(level - 1) % 5]))
                             levelGraphics.DrawImage(frame, new Rectangle((level - 1) % 3 * 600, (level - 1) / 3 * 440 + 35, 600, 394));
                         levelGraphics.DrawString(level + " 级" + (level >= 4 ? " · 前台窗口会轻抖" : ""), label, ink, (level - 1) % 3 * 600 + 24, (level - 1) / 3 * 440 + 5);
                     }
@@ -95,7 +95,7 @@ namespace XWhip
                     {
                         int level = (i - 180) / 90 + 1;
                         if ((i - 180) % 90 == 0) demo = PreviewStrike((level - 1) * 3 + 1, now);
-                        previewMotion.Hold(); strikeAge = (i - 180) % 30 / 30.0;
+                        previewMotion.Hold(); strikeAge = (i - 180) % 45 / 30.0;
                         text = (i - 180) % 90 < 60 ? RageQuotes.Lines[level - 1] : null;
                         caption = "暴躁 " + level + "/6" + (level >= 4 ? " · 前台窗口轻抖，无闪屏" : "");
                     }
@@ -121,12 +121,47 @@ namespace XWhip
                     }
                 }
             }
+            string gagFrames = Path.Combine(folder, "gags"); Directory.CreateDirectory(gagFrames);
+            int[] gagStrikes = { 5, 8, 7 };
+            string[] gagCaptions = { "催你刷 X。先抽到自己。", "不刷 X？腿也别要了。", "业务挂钩。物理意义上的。" };
+            for (int scene = 0; scene < gagStrikes.Length; scene++)
+            using (PetRenderer renderer = new PetRenderer())
+            {
+                PetState pose = PreviewStrike(gagStrikes[scene], start);
+                for (int frameIndex = 0; frameIndex < 75; frameIndex++)
+                {
+                    double age = frameIndex / 30.0;
+                    using (Bitmap frame = renderer.Render(pose, start, age, age, age < .7 ? "你刷了吗？" : null, false, 180, false, 1, 0, 7))
+                    using (Bitmap canvas = new Bitmap(900, 690))
+                    using (Graphics surface = Graphics.FromImage(canvas))
+                    {
+                        surface.Clear(Color.FromArgb(244, 241, 234));
+                        surface.DrawImage(frame, new Rectangle(0, 40, 960, 630));
+                        using (Font title = new Font("Microsoft YaHei", 21, FontStyle.Bold))
+                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString(gagCaptions[scene], title, ink, 30, 28);
+                        using (Font label = new Font("Microsoft YaHei", 12))
+                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X / WHIP  ·  一个催你带薪刷 X 的桌面搭子", label, ink, 30, 77);
+                        canvas.Save(Path.Combine(gagFrames, (scene * 75 + frameIndex).ToString("0000") + ".png"), ImageFormat.Png);
+                    }
+                }
+            }
             using (SettingsForm settings = new SettingsForm(new AppSettings()))
             using (Bitmap bitmap = new Bitmap(settings.Width, settings.Height))
             {
                 settings.StartPosition = FormStartPosition.Manual; settings.Location = new Point(-10000, -10000);
                 settings.Show(); Application.DoEvents();
                 settings.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size)); bitmap.Save(Path.Combine(folder, "settings.png")); settings.Close();
+            }
+        }
+
+        static Bitmap PreviewPose(PetState state, DateTime now, double age, string message)
+        {
+            using (PetRenderer renderer = new PetRenderer())
+            {
+                int frames = (int)Math.Round(age * 120);
+                for (int i = 0; i < frames; i++)
+                    using (Bitmap frame = renderer.Render(state, now, i / 120.0, i / 120.0, null, false, 180)) { }
+                return renderer.Render(state, now, age, age, message, false, 180, false, 1, 0, 7);
             }
         }
 
@@ -210,6 +245,7 @@ namespace XWhip
         internal readonly PetState State;
         AppSettings settings;
         readonly PetRenderer renderer = new PetRenderer();
+        readonly WhipSound whipSound = new WhipSound();
         readonly System.Windows.Forms.Timer frameTimer = new System.Windows.Forms.Timer { Interval = 33 };
         readonly Stopwatch clock = Stopwatch.StartNew();
         readonly NotifyIcon tray;
@@ -224,7 +260,7 @@ namespace XWhip
         double lastFrame, lastStrike = -100, messageUntil, celebrationUntil;
         string message;
         Point downCursor, downLocation;
-        bool mouseHeld, dragged, configuring, impactDone;
+        bool mouseHeld, dragged, configuring, impactDone, soundDone;
         PetMode canvasMode = PetMode.Cooling;
         int renderedSize = 180;
         static readonly TimeZoneInfo DailyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
@@ -337,15 +373,21 @@ namespace XWhip
             catch (UnauthorizedAccessException ex) { ProgressFailure(ex); }
             if (State.Tick(now))
             {
-                lastStrike = time; impactDone = false;
+                lastStrike = time; impactDone = soundDone = false;
                 if (time >= messageUntil && speech.TryWhip(time)) Say(quotes.Next(settings.PromotionEnabled), SpeechSchedule.WhipDisplaySeconds);
             }
             if (canvasMode != State.Mode) { ResizePet(); KeepOnScreen(); }
             double strikeAge = time - lastStrike;
-            if (!impactDone && State.Mode == PetMode.Whipping && strikeAge >= .24 && strikeAge < .8)
+            int strikeVariant = (State.StrikeCount - 1) % 8;
+            double impactTime = strikeVariant == 4 || strikeVariant == 6 || strikeVariant == 7 ? .78 : WhipChoreography.ImpactSeconds;
+            if (!soundDone && State.Mode == PetMode.Whipping && strikeAge >= impactTime - .13 && strikeAge < impactTime + .3)
+            {
+                soundDone = true;
+                if (settings.Sound && !testing) whipSound.Play();
+            }
+            if (!impactDone && State.Mode == PetMode.Whipping && strikeAge >= impactTime && strikeAge < impactTime + .3)
             {
                 impactDone = true;
-                if (settings.Sound && !testing) System.Media.SystemSounds.Exclamation.Play();
                 if (settings.ScreenShakeEnabled && State.AngerLevel >= 4 && !testing && !menu.Visible && !configuring)
                     shake.Begin(Handle, State.AngerLevel, time);
             }
@@ -444,7 +486,7 @@ namespace XWhip
             if (disposing)
             {
                 Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= DisplayChanged;
-                frameTimer.Dispose(); shake.Dispose(); tray.Visible = false; tray.Dispose(); trayIcon.Dispose(); menu.Font.Dispose(); menu.Dispose(); renderer.Dispose();
+                frameTimer.Dispose(); shake.Dispose(); tray.Visible = false; tray.Dispose(); trayIcon.Dispose(); menu.Font.Dispose(); menu.Dispose(); renderer.Dispose(); whipSound.Dispose();
             }
             base.Dispose(disposing);
         }

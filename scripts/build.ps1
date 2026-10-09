@@ -1,4 +1,4 @@
-param([string]$Version = '0.5.0')
+param([string]$Version = '0.6.0')
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
 $taskCompiler = Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'

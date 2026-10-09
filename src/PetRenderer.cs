@@ -10,6 +10,10 @@ namespace XWhip
     {
         readonly Bitmap faces;
         readonly Rectangle[] faceRects;
+        readonly WhipRope rope = new WhipRope();
+        PointF[] lastRope, olderRope;
+        bool wasWhipping;
+        double ropeTime;
         double lastRenderTime = Double.NaN, frozenWalkPhase;
         float walkBlend;
         internal static readonly Color Ink = Color.FromArgb(29, 29, 27);
@@ -102,6 +106,13 @@ namespace XWhip
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 g.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 g.ScaleTransform(scale, scale);
+                if (state.Mode == PetMode.Whipping)
+                {
+                    walkBlend = 0;
+                    RenderWhipping(g, state, time, strikeAge, message, dailyCount);
+                    return frame;
+                }
+                wasWhipping = false; lastRope = olderRope = null;
                 bool mayWalk = state.Mode == PetMode.Cooling;
                 double elapsed = Double.IsNaN(lastRenderTime) || time < lastRenderTime ? 0 : Math.Min(.15, time - lastRenderTime);
                 if (Double.IsNaN(lastRenderTime) || time < lastRenderTime) { walkBlend = 0; frozenWalkPhase = walkPhase; }
@@ -112,46 +123,18 @@ namespace XWhip
                 walkPhase = frozenWalkPhase;
                 walking = mayWalk && walkBlend > 0;
                 int stage = state.CountdownStage(now);
-                bool whip = state.Mode == PetMode.Whipping;
-                double swing = strikeAge >= 0 && strikeAge < .5 ? Math.Sin(strikeAge / .5 * Math.PI) : 0;
-                walking = walking && !whip;
                 float bounce = walking ? -(float)Math.Abs(Math.Sin(walkPhase * 2)) * 1.5f * walkBlend : 0;
                 if (celebration) bounce -= (float)(Math.Abs(Math.Sin(time * 5)) * 18);
-                int variant = Math.Max(0, state.StrikeCount - 1) % 8;
-                float tilt = 0, stretch = 1, wind = 0, snap = 0;
-                PointF whipHand = new PointF(200, 140), whipElbow = new PointF(182, 170);
-                if (whip)
-                {
-                    wind = strikeAge >= 0 && strikeAge < .24 ? (float)Math.Sin(strikeAge / .24 * Math.PI / 2) : 0;
-                    snap = strikeAge >= .24 && strikeAge < .5 ? (float)(1 - (strikeAge - .24) / .26) : 0;
-                    float strength = .7f + state.AngerLevel * .1f;
-                    float[] backs = { -9, -36, -7, 7, -10, -12, 18, 25 }, forwards = { 12, 25, 11, 9, 17, 14, -16, -28 }, jumps = { 6, 16, 14, 6, 0, 80, 28, 12 };
-                    tilt = (backs[variant] * wind + forwards[variant] * snap) * strength;
-                    if (state.AngerLevel >= 5) tilt += (float)Math.Sin(time * (14 + state.AngerLevel * 3)) * (state.AngerLevel - 3) * (float)swing;
-                    if (variant == 3) tilt = Math.Max(-14, Math.Min(12, tilt));
-                    float deform = .08f + Math.Max(0, state.AngerLevel - 3) * .025f;
-                    stretch = 1 + deform * wind - deform * snap;
-                    bounce = -(float)Math.Min(80, swing * jumps[variant] * strength);
-                    StrikeHand(variant, (float)swing, out whipHand, out whipElbow);
-                    float hx = (whipHand.X + 7 - 156) / stretch, hy = (whipHand.Y - 11 - 215) * stretch;
-                    double angle = tilt * Math.PI / 180;
-                    DrawWhip(g, state.AngerLevel, variant, strikeAge, new PointF(320 + hx * (float)Math.Cos(angle) - hy * (float)Math.Sin(angle), 355 + bounce + hx * (float)Math.Sin(angle) + hy * (float)Math.Cos(angle)));
-                    g.TranslateTransform(164, 140);
-                }
                 using (Brush shadow = new SolidBrush(Color.FromArgb(35, 0, 0, 0))) g.FillEllipse(shadow, 124, 252, 70, 8);
-                g.TranslateTransform(0, whip ? 0 : bounce);
+                g.TranslateTransform(0, bounce);
 
-                Color mood = whip || stage >= 2 ? Orange : Ink;
+                Color mood = stage >= 2 ? Orange : Ink;
                 GraphicsState actor = g.Save();
-                if (whip) { g.TranslateTransform(0, bounce); g.TranslateTransform(156, 215); g.RotateTransform(tilt); g.ScaleTransform(1 / stretch, stretch); g.TranslateTransform(-156, -215); }
 
                 using (Pen pen = new Pen(Ink, 4.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
                 {
                     g.DrawLine(pen, 156, 170, 156, 217);
                     float gait = walking ? (float)Math.Sin(walkPhase) * walkBlend : 0;
-                    if (whip) DrawStrikeBody(g, pen, variant, (float)swing, wind, snap, whipHand, whipElbow, state.AngerLevel);
-                    else
-                    {
                     DrawLeg(g, pen, 143 + gait * 8, 250 - (walking ? (float)Math.Max(0, Math.Sin(walkPhase)) * 9 * walkBlend + bounce : 0), facing, walking);
                     DrawLeg(g, pen, 172 - gait * 8, 250 - (walking ? (float)Math.Max(0, -Math.Sin(walkPhase)) * 9 * walkBlend + bounce : 0), facing, walking);
                     if (walking)
@@ -168,8 +151,7 @@ namespace XWhip
                             g.DrawLine(handle, handX - 3, handY + 4, handX + 7, handY - 11);
                         using (Pen rope = new Pen(Ink, 2.5f))
                         {
-                            if (swing > .05) g.DrawBezier(rope, handX + 7, handY - 11, 267, 70, 295, 154, 266 - (float)swing * 4, 226);
-                            else g.DrawBezier(rope, handX + 7, handY - 11, 240, 109, 265, 161, 234, 198);
+                            g.DrawBezier(rope, handX + 7, handY - 11, 240, 109, 265, 161, 234, 198);
                         }
                     }
                     else if (stage == 1)
@@ -187,50 +169,35 @@ namespace XWhip
                         g.DrawLines(pen, new PointF[] { new PointF(153, 184), new PointF(135, 201), new PointF(131, 217) });
                         g.DrawLines(pen, new PointF[] { new PointF(160, 184), new PointF(178, 201), new PointF(183, 215) });
                     }
-                    }
                 }
 
-                int[] relaxed = { 0, 1, 2, 8, 10, 11, 9 }, furious = { 5, 6, 7, 13, 14, 15 };
-                int expression = whip ? furious[Math.Min(5, state.AngerLevel - 1)] : stage == 0 ? relaxed[(int)(time / 12) % relaxed.Length] : stage == 1 ? ((int)(time / 10) % 2 == 0 ? 3 : 9) : stage == 2 ? ((int)(time / 10) % 3 == 2 ? 13 : 4 + (int)(time / 10) % 2) : ((int)(time / 10) % 2 == 0 ? 6 : 12);
-                if (!whip && !String.IsNullOrEmpty(message) && (celebration || message.Contains("收手") || message.Contains("放你"))) expression = 0;
+                int[] relaxed = { 0, 1, 2, 8, 10, 11, 9 };
+                int expression = stage == 0 ? relaxed[(int)(time / 12) % relaxed.Length] : stage == 1 ? ((int)(time / 10) % 2 == 0 ? 3 : 9) : stage == 2 ? ((int)(time / 10) % 3 == 2 ? 13 : 4 + (int)(time / 10) % 2) : ((int)(time / 10) % 2 == 0 ? 6 : 12);
+                if (!String.IsNullOrEmpty(message) && (celebration || message.Contains("收手") || message.Contains("放你"))) expression = 0;
                 Rectangle cell = faceRects[expression];
-                float lean = whip ? (float)swing * 5 : facing * 3;
+                float lean = facing * 3;
                 float headHeight = 128;
                 float headWidth = headHeight * cell.Width / cell.Height;
                 g.DrawImage(faces, new RectangleF(158 - headWidth / 2 + lean, 176 - headHeight, headWidth, headHeight), cell, GraphicsUnit.Pixel);
-                if (stage >= 2 && (whip || String.IsNullOrEmpty(message)))
+                if (stage >= 2 && String.IsNullOrEmpty(message))
                 {
                     using (Pen steam = new Pen(Orange, 2.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
                     {
                         float jitter = (float)Math.Sin(time * 8) * 3;
                         g.DrawBezier(steam, 223, 103, 234, 96, 219, 87, 229, 79 + jitter);
                         if (stage >= 3) g.DrawBezier(steam, 234, 113, 245, 105, 231, 95, 239, 87 - jitter);
-                        if (whip && state.AngerLevel >= 3) g.DrawBezier(steam, 96, 102, 85, 96, 97, 85, 89, 74 + jitter);
                     }
                 }
                 PointF[] headCorners = { new PointF(158 - headWidth / 2 + lean, 48), new PointF(158 + headWidth / 2 + lean, 48), new PointF(158 - headWidth / 2 + lean, 176), new PointF(158 + headWidth / 2 + lean, 176) };
                 using (Matrix transform = g.Transform) transform.TransformPoints(headCorners);
                 g.Restore(actor);
                 using (Matrix transform = g.Transform) { transform.Invert(); transform.TransformPoints(headCorners); }
-                DrawBubble(g, message, HeadBounds(headCorners), whip ? new RectangleF(-164, -140, 640, 420) : new RectangleF(0, -bounce, 320, 280));
+                DrawBubble(g, message, HeadBounds(headCorners), new RectangleF(0, -bounce, 320, 280));
 
-                string status;
-                if (whip) status = "暴躁 " + state.AngerLevel + "/6  ·  点击安抚";
-                else
-                {
-                    TimeSpan remaining = state.Remaining(now);
-                    string[] names = { "摸鱼", "盯你", "催促", "蓄力" };
-                    status = names[Math.Min(stage, 3)] + "  ·  " + ((int)remaining.TotalMinutes).ToString("00") + ":" + remaining.Seconds.ToString("00");
-                }
-                float statusY = whip ? 260 : 263;
-                DrawFooter(g, status + "  ·  今日记录 " + dailyCount, mood, statusY);
-                if (!whip && swing > .5)
-                {
-                    using (Pen impact = new Pen(Orange, 3))
-                    {
-                        g.DrawLine(impact, 267, 225, 284, 231); g.DrawLine(impact, 265, 234, 275, 249); g.DrawLine(impact, 261, 224, 276, 214);
-                    }
-                }
+                TimeSpan remaining = state.Remaining(now);
+                string[] names = { "摸鱼", "盯你", "催促", "蓄力" };
+                string status = names[Math.Min(stage, 3)] + "  ·  " + ((int)remaining.TotalMinutes).ToString("00") + ":" + remaining.Seconds.ToString("00");
+                DrawFooter(g, status + "  ·  今日记录 " + dailyCount, mood, 263);
             }
             return frame;
         }
@@ -273,110 +240,164 @@ namespace XWhip
                 g.DrawString(status, font, ink, new RectangleF(38, y - 1, 244, 18), center);
         }
 
-        static void StrikeHand(int variant, float swing, out PointF hand, out PointF elbow)
+        void RenderWhipping(Graphics g, PetState state, double time, double age, string message, int dailyCount)
         {
-            PointF[] hands = { new PointF(204, 160), new PointF(207, 132), new PointF(178, 57), new PointF(236, 155), new PointF(199, 132), new PointF(213, 138), new PointF(208, 158), new PointF(114, 186) };
-            PointF[] elbows = { new PointF(184, 171), new PointF(186, 164), new PointF(183, 115), new PointF(198, 165), new PointF(179, 155), new PointF(187, 160), new PointF(188, 172), new PointF(132, 176) };
-            float[] dx = { 16, 22, 28, 12, 16, 6, 21, -6 }, dy = { 39, 65, 116, 44, 55, 36, 35, 8 };
-            hand = new PointF(hands[variant].X + dx[variant] * swing, hands[variant].Y + dy[variant] * swing); elbow = elbows[variant];
+            age = Math.Max(0, age);
+            int variant = Math.Max(0, state.StrikeCount - 1) % 8;
+            WhipPose pose = WhipChoreography.Sample(variant, state.AngerLevel, age);
+            float length = 145 + (state.AngerLevel - 1) * 17;
+            if (!wasWhipping || time <= ropeTime)
+            {
+                rope.Reset(pose.HandleTip, pose.HandleDirection, length);
+                lastRope = olderRope = null;
+            }
+            rope.Advance(wasWhipping ? Math.Max(0, time - ropeTime) : 0,
+                pose.HandleTip, pose.HandleDirection, length, new RectangleF(-154, -132, 620, 388));
+            wasWhipping = true; ropeTime = time;
+            PointF[] shape = ComedyRope(rope.Points, pose, variant, age);
+            g.TranslateTransform(164, 140);
+            if (variant == 6)
+            {
+                using (Pen post = new Pen(Ink, 3)) { g.DrawLine(post, 385, -90, 385, -42); g.DrawLine(post, 371, -90, 397, -90); }
+                using (Brush sign = new SolidBrush(Ink)) g.FillRectangle(sign, 369, -42, 33, 36);
+                using (Font font = new Font("Consolas", 19, FontStyle.Bold))
+                using (Brush white = new SolidBrush(Color.White)) g.DrawString("X", font, white, 375, -39);
+            }
+            using (Brush shadow = new SolidBrush(Color.FromArgb(35, 0, 0, 0)))
+                g.FillEllipse(shadow, 122, 252, 74, 8);
+            if (age >= .30 && age <= .70)
+            {
+                if (olderRope != null) DrawRope(g, olderRope, Color.FromArgb(28, Orange), false);
+                if (lastRope != null) DrawRope(g, lastRope, Color.FromArgb(65, Orange), false);
+            }
+            DrawRope(g, shape, Color.FromArgb(79, 47, 29), true);
+            using (Pen pen = new Pen(Ink, 4.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
+            {
+                g.DrawLine(pen, pose.Neck, pose.Hip);
+                DrawPoseLeg(g, pen, pose.Hip, pose.LeftFoot, -1, variant == 6 ? pose.Reaction : 0);
+                DrawPoseLeg(g, pen, pose.Hip, pose.RightFoot, 1, variant == 6 ? pose.Reaction : 0);
+                g.DrawLines(pen, new PointF[] { new PointF(pose.Shoulder.X - 5, pose.Shoulder.Y), pose.FreeElbow, pose.FreeHand });
+                g.DrawLines(pen, new PointF[] { pose.Shoulder, pose.Elbow, pose.Hand });
+            }
+            using (Pen handle = new Pen(Color.FromArgb(137, 71, 43), 6) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                g.DrawLine(handle, new PointF(pose.Hand.X - pose.HandleDirection.X * 5, pose.Hand.Y - pose.HandleDirection.Y * 5), pose.HandleTip);
+            int[] furious = { 5, 6, 7, 13, 14, 15 };
+            int expression = furious[Math.Min(5, state.AngerLevel - 1)];
+            if (variant >= 4 && age >= .78 && age < 1.16) expression = 9;
+            if (variant == 4 && age >= 1.16 && age < 1.82) expression = 2;
+            Rectangle cell = faceRects[expression];
+            float headWidth = 128f * cell.Width / cell.Height;
+            GraphicsState head = g.Save();
+            g.TranslateTransform(pose.HeadCenter.X, pose.HeadCenter.Y); g.RotateTransform(pose.HeadAngle);
+            g.DrawImage(faces, new RectangleF(-headWidth / 2, -64, headWidth, 128), cell, GraphicsUnit.Pixel);
+            PointF[] corners = { new PointF(-headWidth / 2, -64), new PointF(headWidth / 2, -64), new PointF(-headWidth / 2, 64), new PointF(headWidth / 2, 64) };
+            using (Matrix transform = g.Transform) transform.TransformPoints(corners);
+            g.Restore(head);
+            using (Matrix transform = g.Transform) { transform.Invert(); transform.TransformPoints(corners); }
+            if (variant == 7 && pose.Reaction > 0)
+            {
+                PointF[] front = new PointF[8]; Array.Copy(shape, shape.Length - front.Length, front, 0, front.Length);
+                DrawRope(g, front, Color.FromArgb(79, 47, 29), true);
+            }
+            if (variant == 4 && age >= 1.16 && age <= 1.82)
+            {
+                RectangleF phone = new RectangleF(pose.FreeHand.X - 8, pose.FreeHand.Y - 23, 17, 26);
+                using (Brush black = new SolidBrush(Ink)) g.FillRectangle(black, phone);
+                using (Font font = new Font("Consolas", 11, FontStyle.Bold))
+                using (Brush white = new SolidBrush(Color.White)) g.DrawString("X", font, white, phone.X + 2, phone.Y + 2);
+            }
+            double impactTime = variant == 4 || variant == 6 || variant == 7 ? .78 : WhipChoreography.ImpactSeconds;
+            if (age >= impactTime && age < impactTime + .16)
+            {
+                PointF tip = shape[shape.Length - 1];
+                int alpha = (int)(255 * (1 - (age - impactTime) / .16));
+                using (Pen hit = new Pen(Color.FromArgb(alpha, Orange), 2.5f))
+                {
+                    g.DrawLine(hit, tip.X + 6, tip.Y - 5, tip.X + 17, tip.Y - 12);
+                    g.DrawLine(hit, tip.X + 8, tip.Y + 1, tip.X + 22, tip.Y + 3);
+                }
+                using (Font font = new Font("Microsoft YaHei", 14, FontStyle.Bold))
+                using (Brush ink = new SolidBrush(Color.FromArgb(alpha, Ink)))
+                    g.DrawString(variant == 4 ? "啊?" : "啪", font, ink, tip.X + 8, tip.Y - 30);
+            }
+            DrawBubble(g, message, HeadBounds(corners), new RectangleF(-164, -140, 640, 420));
+            DrawFooter(g, "暴躁 " + state.AngerLevel + "/6  ·  点击安抚  ·  今日记录 " + dailyCount, Orange, 260);
+            olderRope = lastRope; lastRope = shape;
         }
 
-        static void DrawStrikeBody(Graphics g, Pen pen, int variant, float swing, float wind, float snap, PointF hand, PointF elbow, int level)
+        static void DrawPoseLeg(Graphics g, Pen pen, PointF hip, PointF foot, int side, float dangling = 0)
         {
-            if (variant == 3)
-            {
-                g.DrawLines(pen, new PointF[] { new PointF(156, 217), new PointF(181, 231), new PointF(212, 249) });
-                g.DrawLines(pen, new PointF[] { new PointF(156, 217), new PointF(127, 223), new PointF(102, 249) });
-                g.DrawLine(pen, 205, 250, 221, 250); g.DrawLine(pen, 96, 250, 112, 250);
-            }
-            else if (variant == 5 && swing > .1f)
-            {
-                g.DrawLines(pen, new PointF[] { new PointF(156, 217), new PointF(141, 229), new PointF(128, 221 + (1 - swing) * 28) });
-                g.DrawLines(pen, new PointF[] { new PointF(156, 217), new PointF(173, 229), new PointF(189, 224 + (1 - swing) * 25) });
-            }
-            else
-            {
-                DrawLeg(g, pen, variant == 7 ? 124 : 143, 250 - (variant == 4 ? wind * 13 : 0), 1, variant == 4);
-                DrawLeg(g, pen, variant == 7 ? 185 : 172, 250 - (variant == 7 ? wind * 12 : 0), 1, variant == 7);
-            }
-            PointF[] offElbows = { new PointF(134, 199), new PointF(129, 179), new PointF(128, 122), new PointF(128, 188), new PointF(134, 199), new PointF(147, 159), new PointF(128, 175), new PointF(179, 175) };
-            PointF[] offHands = { new PointF(146, 207), new PointF(113, 192), hand, new PointF(108, 174), new PointF(145, 207), new PointF(122, 143), new PointF(110, 166), new PointF(203, 164) };
-            g.DrawLines(pen, new PointF[] { new PointF(153, 184), offElbows[variant], offHands[variant] });
-            g.DrawLines(pen, new PointF[] { new PointF(160, 187), elbow, hand });
-            if (level >= 4 && swing > .05f)
-            using (Pen arms = new Pen(Color.FromArgb(90 + (level - 4) * 35, Orange), 3.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
-                for (int i = 0; i < level - 3; i++)
-                    for (int side = -1; side <= 1; side += 2)
-                        g.DrawLines(arms, new PointF[] { new PointF(156, 186), new PointF(156 + side * (33 + i * 7), 187 - i * 8), new PointF(156 + side * (58 + i * 12), 164 - i * 17 + swing * 18) });
-            using (Pen handle = new Pen(Color.FromArgb(137, 71, 43), 6) { StartCap = LineCap.Round, EndCap = LineCap.Round }) g.DrawLine(handle, hand.X - 3, hand.Y + 4, hand.X + 7, hand.Y - 11);
-            if (variant == 4 && snap > 0) using (Pen stomp = new Pen(Color.FromArgb((int)(snap * 180), Orange), 3)) { g.DrawLine(stomp, 122, 254, 132, 248); g.DrawLine(stomp, 153, 251, 162, 255); }
+            PointF knee = new PointF((hip.X + foot.X) / 2 + side * 7, (hip.Y + foot.Y) / 2 - 3);
+            knee.X += (hip.X + side * 17 - knee.X) * dangling;
+            knee.Y += (hip.Y + 18 - knee.Y) * dangling;
+            g.DrawLines(pen, new PointF[] { hip, knee, foot });
+            g.DrawLine(pen, foot.X - 4, foot.Y - dangling * 4, foot.X + 9 - dangling * 5, foot.Y + dangling * 4);
         }
 
-        void DrawWhip(Graphics g, int level, int variant, double age, PointF hand)
+        static PointF[] ComedyRope(PointF[] physical, WhipPose pose, int variant, double age)
         {
-            bool active = age >= 0 && age < .5;
-            float phase = active ? (float)(age / .5) : 0;
-            using (Pen rope = new Pen(Ink, 3.5f + level) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
+            PointF[] shape = (PointF[])physical.Clone();
+            if (variant != 4 && variant != 6 && variant != 7) return shape;
+            float weight = Ease((age - .58) / .20) * (1 - Ease((age - 1.08) / .22));
+            if (weight == 0) return shape;
+            for (int i = 2; i < shape.Length; i++)
             {
-                if (!active) { g.DrawBezier(rope, hand.X, hand.Y, hand.X + 90, hand.Y - 35, 475, 315, 443, 371); return; }
-                for (int trail = 2; trail >= 0; trail--)
-                using (Pen blur = new Pen(Color.FromArgb(trail == 0 ? 255 : 60 - trail * 15, trail == 0 ? Ink : Orange), trail == 0 ? 4 + level : 9 + level * 2))
+                float t = (float)i / (shape.Length - 1);
+                PointF target;
+                PointF root = pose.HandleTip;
+                if (variant == 7)
                 {
-                    float delta = trail * 13, endY = phase < .48f ? 64 + phase * 300 : 334;
-                    switch (variant)
-                    {
-                    case 0: g.DrawBezier(blur, hand.X, hand.Y, 575 - delta, 31 + delta, 616, 145 + delta, 570 - delta, endY); break;
-                    case 1: g.DrawBezier(blur, hand.X, hand.Y, 55 + delta, 77, 567, 25 + delta, 557, endY); break;
-                    case 2: g.DrawBezier(blur, hand.X, hand.Y, 107 + delta, 52 + delta, 587, 55 + delta, 550, 323); break;
-                    case 3: g.DrawBezier(blur, hand.X, hand.Y, 604, 192 + delta, 145, 386 - delta, 557, 323); break;
-                    case 4: g.DrawBezier(blur, hand.X, hand.Y, 478, 374 - delta, 612, 253, 557, 323); break;
-                    case 5: g.DrawBezier(blur, hand.X, hand.Y, 572, 74 + delta, 626 - delta, 283, 557, 323); break;
-                    case 6:
-                        g.DrawBezier(blur, hand.X, hand.Y, 614, 32 + delta, 44 + delta, 18, 90 + delta, 219);
-                        g.DrawArc(blur, 90 + delta, 64 + delta, 484 - delta * 2, 287 - delta, -25 + phase * 380, 330);
-                        g.DrawArc(blur, 129 + delta, 95 + delta, 410 - delta * 2, 223 - delta, 160 - phase * 430, 320);
-                        g.DrawBezier(blur, 519, 165, 610, 207, 602, 269, 558, 330);
-                        break;
-                    default:
-                        g.DrawBezier(blur, hand.X, hand.Y, 174, 174, 467, 95 + delta, 454 - delta, 255);
-                        g.DrawArc(blur, 224 + delta, 133 + delta, 207 - delta, 188 - delta, 25 - phase * 430, 340);
-                        g.DrawArc(blur, 246 + delta, 164 + delta, 164 - delta, 159 - delta, 120 + phase * 490, 345);
-                        g.DrawBezier(blur, 259, 311, 327, 389, 429, 363, 465, 320); break;
-                    }
+                    float left = pose.LeftFoot.X, right = pose.RightFoot.X, floor = pose.LeftFoot.Y;
+                    float u = t * 3;
+                    if (u < 1) target = Cubic(root, new PointF(root.X + pose.HandleDirection.X * 65, root.Y + pose.HandleDirection.Y * 65), new PointF(right + 42, floor - 25), new PointF(right + 20, floor), u);
+                    else if (u < 2) target = Cubic(new PointF(right + 20, floor), new PointF(right + 30, floor + 20), new PointF(left - 32, floor + 20), new PointF(left - 20, floor), u - 1);
+                    else target = Cubic(new PointF(left - 20, floor), new PointF(left - 24, floor - 20), new PointF(right + 18, floor - 20), new PointF(right + 6, floor - 3), u - 2);
                 }
-                if (level >= 4)
+                else
                 {
-                    int extra = level == 4 ? 1 : level == 5 ? 2 : 4;
-                    for (int i = 0; i < extra; i++)
-                    {
-                        float end = 90 + i * (460f / Math.Max(1, extra - 1));
-                        using (Pen glow = new Pen(Color.FromArgb(100 + level * 10, Orange), 10)) g.DrawBezier(glow, hand.X, hand.Y, end, 70 + i % 2 * 95, end + 42, 277, end, 350 - i % 2 * 35);
-                        using (Pen lash = new Pen(Ink, 3 + level * .5f)) g.DrawBezier(lash, hand.X, hand.Y, end, 70 + i % 2 * 95, end + 42, 277, end, 350 - i % 2 * 35);
-                    }
+                    PointF tip = variant == 6 ? new PointF(385, -20) : new PointF(pose.Hip.X - 15, pose.Hip.Y - 1);
+                    PointF control = variant == 6 ? new PointF(340, -20) : new PointF(311, 254);
+                    target = Cubic(root, new PointF(root.X + pose.HandleDirection.X * 65, root.Y + pose.HandleDirection.Y * 65), control, tip, t);
                 }
-                if (level >= 3)
+                shape[i] = new PointF(shape[i].X + (target.X - shape[i].X) * weight, shape[i].Y + (target.Y - shape[i].Y) * weight);
+            }
+            return shape;
+        }
+
+        static PointF Cubic(PointF a, PointF b, PointF c, PointF d, float t)
+        {
+            float u = 1 - t;
+            return new PointF(u * u * u * a.X + 3 * u * u * t * b.X + 3 * u * t * t * c.X + t * t * t * d.X,
+                u * u * u * a.Y + 3 * u * u * t * b.Y + 3 * u * t * t * c.Y + t * t * t * d.Y);
+        }
+        static float Ease(double value) { float t = (float)Math.Max(0, Math.Min(1, value)); return t * t * (3 - 2 * t); }
+
+        static void DrawRope(Graphics g, PointF[] points, Color color, bool outline)
+        {
+            using (GraphicsPath full = RopePath(points, 0, points.Length - 1))
+            {
+                if (outline)
+                    using (Pen halo = new Pen(Color.FromArgb(235, 246, 242, 233), 6) { LineJoin = LineJoin.Round })
+                        g.DrawPath(halo, full);
+                for (int section = 0; section < 4; section++)
                 {
-                    if (variant == 6 || variant == 7) {
-                    PointF[] spiral = new PointF[65];
-                    for (int i = 0; i < spiral.Length; i++) { double a = i * .24 + phase * 13; float r = 158 - i * 1.8f; spiral[i] = new PointF(331 + (float)Math.Cos(a) * r * 1.45f, 232 + (float)Math.Sin(a) * r * .82f); }
-                    using (Pen fire = new Pen(Color.FromArgb(190, Orange), 5)) g.DrawLines(fire, spiral);
-                    }
-                    using (Pen speed = new Pen(Color.FromArgb(115, Ink), 3))
-                        for (int i = 0; i < 12; i++) { double a = i * Math.PI / 6; float x = (float)Math.Cos(a), y = (float)Math.Sin(a); g.DrawLine(speed, 320 + x * 194, 222 + y * 148, 320 + x * 271, 222 + y * 180); }
-                    if (variant != 7) using (Pen lightning = new Pen(Orange, 7) { LineJoin = LineJoin.Bevel }) g.DrawLines(lightning, new PointF[] { new PointF(480, 127), new PointF(544, 168), new PointF(521, 207), new PointF(579, 252), new PointF(550, 318) });
+                    int begin = section * (points.Length - 1) / 4, end = (section + 1) * (points.Length - 1) / 4;
+                    using (GraphicsPath path = RopePath(points, begin, end))
+                    using (Pen core = new Pen(color, 3.6f - section * .65f) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                        g.DrawPath(core, path);
                 }
             }
-            if (age < .24 || age > .43) return;
-            int alpha = (int)(255 * (1 - (age - .24) / .19)); float radius = level >= 3 ? 71 + (level - 3) * 3 : level == 2 ? 44 : 27;
-            float impactX = variant == 7 ? 465 : level >= 4 ? 546 : 557;
-            PointF[] burst = new PointF[24];
-            for (int i = 0; i < burst.Length; i++) { double a = i * Math.PI / 12; float r = i % 2 == 0 ? radius : radius * .56f; burst[i] = new PointF(impactX + (float)Math.Cos(a) * r, 323 + (float)Math.Sin(a) * r); }
-            using (Brush fire = new SolidBrush(Color.FromArgb(alpha, Orange))) g.FillPolygon(fire, burst);
-            using (Pen outline = new Pen(Color.FromArgb(alpha, Ink), 3)) g.DrawPolygon(outline, burst);
-            using (Font font = new Font("Microsoft YaHei", level >= 3 ? 32 + (level - 3) * 2 : level == 2 ? 22 : 14, FontStyle.Bold))
-            using (Brush ink = new SolidBrush(Color.FromArgb(alpha, Ink)))
-            using (StringFormat centered = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-                g.DrawString(level >= 5 ? "啪!!!" : level >= 3 ? "啪!!" : "啪!", font, ink, new RectangleF(impactX - radius, 323 - radius, radius * 2, radius * 2), centered);
+        }
+        static GraphicsPath RopePath(PointF[] points, int start, int end)
+        {
+            GraphicsPath path = new GraphicsPath();
+            for (int i = start; i < end; i++)
+            {
+                PointF a = points[Math.Max(0, i - 1)], b = points[i], c = points[i + 1], d = points[Math.Min(points.Length - 1, i + 2)];
+                path.AddBezier(b, new PointF(b.X + (c.X - a.X) / 6, b.Y + (c.Y - a.Y) / 6),
+                    new PointF(c.X - (d.X - b.X) / 6, c.Y - (d.Y - b.Y) / 6), c);
+            }
+            return path;
         }
 
         internal static GraphicsPath Rounded(RectangleF rect, float radius)
