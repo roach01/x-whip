@@ -102,10 +102,9 @@ namespace XWhip
                     else
                     {
                         if (i == 720) demo.Calm(now);
-                        if (i == 780) demo.Rest(now);
-                        previewMotion.Hold();
+                        previewMotion.Tick(1 / 30.0, 0, 260, 330);
                         text = i < 780 ? "今日 +1。好的老板，我收手。" : null;
-                        caption = i < 780 ? "点击 +1 · 重新计时" : "下班 · 墨镜躺平";
+                        caption = i < 780 ? "点击 +1 · 重新计时" : "开着就一直催 · 新一轮冷却";
                     }
                     using (Bitmap frame = renderer.Render(demo, now, i / 30.0, strikeAge, text, false, 180, previewMotion.Moving, previewMotion.Direction, previewMotion.WalkPhase, i >= 720 ? 8 : 7))
                     using (Bitmap canvas = new Bitmap(900, 690))
@@ -113,23 +112,13 @@ namespace XWhip
                     {
                         surface.Clear(Color.FromArgb(244, 241, 234));
                         Point offset = PetRenderer.ActorOffset(demo.Mode, 180);
-                        surface.DrawImageUnscaled(frame, (i < 180 ? (int)previewMotion.X : 290) - offset.X, 280 - offset.Y);
+                        surface.DrawImageUnscaled(frame, (i < 180 || i >= 720 ? (int)previewMotion.X : 290) - offset.X, 280 - offset.Y);
                         using (Font title = new Font("Microsoft YaHei", 15, FontStyle.Bold))
                         using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X / WHIP", title, ink, 24, 16);
                         using (Font label = new Font("Microsoft YaHei", 11))
                         using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString(caption, label, ink, 24, 50);
                         canvas.Save(Path.Combine(framesFolder, i.ToString("0000") + ".png"), ImageFormat.Png);
                     }
-                }
-                PetState resting = new PetState(15, start); resting.Rest(start);
-                using (Bitmap rest = renderer.Render(resting, start, 3, -1, null, false, 240))
-                using (Bitmap canvas = new Bitmap(480, 440))
-                using (Graphics surface = Graphics.FromImage(canvas))
-                {
-                    surface.Clear(Color.FromArgb(244, 241, 234)); surface.DrawImageUnscaled(rest, 27, 42);
-                    using (Font title = new Font("Microsoft YaHei", 15, FontStyle.Bold))
-                    using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("OFF DUTY / 下班躺平", title, ink, 24, 12);
-                    canvas.Save(Path.Combine(folder, "off-duty.png"), ImageFormat.Png);
                 }
             }
             using (SettingsForm settings = new SettingsForm(new AppSettings()))
@@ -151,44 +140,49 @@ namespace XWhip
 
         static void Smoke(string report)
         {
-            using (PetForm form = new PetForm(new AppSettings { Roam = false, Sound = false, WorkHoursEnabled = false }, true))
+            AppSettings legacy;
+            System.Xml.Serialization.XmlSerializer serializer = new System.Xml.Serialization.XmlSerializer(typeof(AppSettings));
+            using (StringReader input = new StringReader("<AppSettings><IntervalMinutes>7</IntervalMinutes><Roam>false</Roam><WorkHoursEnabled>true</WorkHoursEnabled><WorkStartMinutes>540</WorkStartMinutes><WorkEndMinutes>1080</WorkEndMinutes><PromotionEnabled>false</PromotionEnabled></AppSettings>"))
+                legacy = (AppSettings)serializer.Deserialize(input);
+            if (legacy.IntervalMinutes != 7 || legacy.PromotionEnabled) throw new Exception("Legacy settings lost retained values");
+            using (StringWriter output = new StringWriter())
+            {
+                serializer.Serialize(output, legacy);
+                if (output.ToString().Contains("WorkHoursEnabled") || output.ToString().Contains("WorkStartMinutes") || output.ToString().Contains("WorkEndMinutes"))
+                    throw new Exception("Legacy work-hour fields survived settings save");
+            }
+            using (PetForm migrated = new PetForm(legacy, true))
+            {
+                migrated.Show(); Application.DoEvents(); migrated.PumpOnce();
+                if (migrated.State.Mode != PetMode.Cooling || migrated.State.IntervalMinutes != 7) throw new Exception("Legacy schedule still stopped reminders");
+                migrated.Close();
+            }
+            using (PetForm form = new PetForm(new AppSettings { Roam = false, Sound = false }, true))
             {
                 form.Show(); Application.DoEvents(); form.TriggerTest();
                 form.PumpOnce();
                 if (form.State.Mode != PetMode.Whipping || form.State.StrikeCount != 1) throw new Exception("First strike failed");
                 form.ClickForTest();
                 if (form.State.Mode != PetMode.Cooling || form.State.StrikeCount != 0) throw new Exception("Click did not calm");
-                form.State.TogglePause(DateTime.UtcNow); form.PumpOnce();
-                if (form.State.Mode != PetMode.Paused) throw new Exception("Pause failed");
                 if (form.DailyCount != 1) throw new Exception("Click did not increment progress");
-                form.ClockOut(); form.ClickForTest();
-                if (form.State.Mode != PetMode.Resting || form.DailyCount != 2) throw new Exception("Off-duty click must count and stay resting");
-                form.TriggerTest(); form.PumpOnce();
-                if (form.State.Mode != PetMode.Whipping) throw new Exception("Off-duty trial did not change state");
-                form.TriggerTest(); form.PumpOnce();
-                if (form.State.Mode != PetMode.Whipping) throw new Exception("Repeated trial lost override");
                 form.ClickForTest();
-                if (form.State.Mode != PetMode.Resting || form.DailyCount != 3) throw new Exception("Trial click must return to rest and count");
-                form.ClockIn();
-                if (form.State.Mode != PetMode.Cooling) throw new Exception("Manual clock-in failed");
+                if (form.State.Mode != PetMode.Cooling || form.DailyCount != 2) throw new Exception("Cooling click must count and restart timer");
+                form.TriggerTest(); form.PumpOnce();
+                if (form.State.Mode != PetMode.Whipping) throw new Exception("Trial did not change state");
+                form.TriggerTest(); form.PumpOnce();
+                if (form.State.Mode != PetMode.Whipping) throw new Exception("Repeated trial did not whip");
+                form.ClickForTest();
+                if (form.State.Mode != PetMode.Cooling || form.DailyCount != 3) throw new Exception("Trial click must restart cooling and count");
                 bool hasFriendLink = false;
                 foreach (ToolStripItem item in form.ContextMenuStrip.Items)
+                {
+                    if (item.Text.Contains("下班") || item.Text.Contains("上班") || item.Text.Contains("暂停")) throw new Exception("Stopped reminder control remained");
                     if (item.Text == "查看我的好友卡皮芭拉 ↗" && item.Enabled) hasFriendLink = true;
+                }
                 if (!hasFriendLink) throw new Exception("Permanent friend link missing");
                 form.Close();
             }
-            using (PetForm scheduled = new PetForm(new AppSettings { Roam = false, Sound = false }, true))
-            {
-                DateTime utc = new DateTime(2026, 10, 9, 10, 0, 0, DateTimeKind.Utc);
-                DateTime local = new DateTime(2026, 10, 9, 18, 0, 0);
-                scheduled.State.TestWhip(utc); scheduled.State.Tick(utc);
-                scheduled.ApplyWorkHours(utc, local);
-                if (scheduled.State.Mode != PetMode.Resting) throw new Exception("Scheduled clock-out did not interrupt whipping");
-                scheduled.ApplyWorkHours(utc.AddHours(15), local.AddHours(15));
-                if (scheduled.State.Mode != PetMode.Cooling || scheduled.State.Remaining(utc.AddHours(15)).TotalMinutes != 15)
-                    throw new Exception("Next shift did not start a full cooldown");
-            }
-            using (PetForm hiddenPromotion = new PetForm(new AppSettings { PromotionEnabled = false, WorkHoursEnabled = false }, true))
+            using (PetForm hiddenPromotion = new PetForm(new AppSettings { PromotionEnabled = false }, true))
             {
                 foreach (ToolStripItem item in hiddenPromotion.ContextMenuStrip.Items)
                     if (item.Text.Contains("卡皮芭拉") && item.Available) throw new Exception("Promotion remained visible");
@@ -207,7 +201,7 @@ namespace XWhip
                 if (target.Location != original) throw new Exception("Interrupted shake did not restore window");
                 target.Close();
             }
-            File.WriteAllText(report, "PASS: layered alpha, six-level rendering, click +1, off-duty click +1, off-duty trial/repeat/calm, promotion disabled, work hours, next shift, level-4 threshold, window-shake movement/restoration/cancellation, disposal. No desktop capture or flashing overlay.\r\n");
+            File.WriteAllText(report, "PASS: layered alpha, six-level rendering, click +1, continuous cooling/whipping, trial/repeat/calm, no off-duty or pause controls, legacy settings ignore work-hour fields, promotion disabled, level-4 threshold, window-shake movement/restoration/cancellation, disposal. No desktop capture or flashing overlay.\r\n");
         }
     }
 
@@ -233,10 +227,9 @@ namespace XWhip
         bool mouseHeld, dragged, configuring, impactDone;
         PetMode canvasMode = PetMode.Cooling;
         int renderedSize = 180;
-        DateTime? manualRestUntil, manualWorkUntil;
-        static readonly TimeZoneInfo WorkTimeZone = TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
+        static readonly TimeZoneInfo DailyTimeZone = TimeZoneInfo.FindSystemTimeZoneById("China Standard Time");
         readonly bool testing;
-        bool trialOutsideHours, progressSaveFailed;
+        bool progressSaveFailed;
         internal int DailyCount { get { return progress.Count; } }
 
         internal PetForm(AppSettings values, bool test = false)
@@ -244,37 +237,28 @@ namespace XWhip
             settings = values; testing = test; State = new PetState(settings.IntervalMinutes, DateTime.UtcNow);
             string progressPath = test ? Path.Combine(Path.GetTempPath(), "XWhip-test-" + Guid.NewGuid().ToString("N"), "daily.xml") :
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "XWhipPet", "daily.xml");
-            try { progress = new DailyProgress(progressPath, WorkLocal(DateTime.UtcNow)); }
+            try { progress = new DailyProgress(progressPath, BeijingLocal(DateTime.UtcNow)); }
             catch (Exception ex)
             {
                 if (!(ex is IOException || ex is UnauthorizedAccessException || ex is System.Xml.XmlException || ex is FormatException)) throw;
                 if (File.Exists(progressPath)) File.Move(progressPath, progressPath + ".corrupt-" + DateTime.UtcNow.Ticks);
-                progress = new DailyProgress(progressPath, WorkLocal(DateTime.UtcNow));
+                progress = new DailyProgress(progressPath, BeijingLocal(DateTime.UtcNow));
             }
             FormBorderStyle = FormBorderStyle.None; ShowInTaskbar = false; TopMost = true;
             StartPosition = FormStartPosition.Manual; Cursor = Cursors.Hand; AutoScaleMode = AutoScaleMode.None;
             ResizePet(); Rectangle desktop = Screen.PrimaryScreen.WorkingArea;
             Location = new Point(desktop.Right - Width - 35, desktop.Bottom - Height - 8); motion.Reset(Left);
             menu.Font = new Font("Microsoft YaHei", 9); menu.BackColor = Color.FromArgb(246, 242, 233);
-            AddMenu("去 X 营业 ↗", delegate { OpenX(); });
+            AddMenu("去 X 摸鱼 ↗", delegate { OpenX(); });
             friendLink = AddMenu("查看我的好友卡皮芭拉 ↗", delegate { OpenFriend(); });
             friendLink.Visible = settings.PromotionEnabled;
             AddMenu("完成一次互动 ✓", delegate { Complete(); });
             menu.Items.Add(new ToolStripSeparator());
-            ToolStripMenuItem pause = AddMenu("暂停 / 继续", delegate { State.TogglePause(DateTime.UtcNow); });
-            ToolStripMenuItem clockOut = AddMenu("今日下班 · 躺平", delegate { ClockOut(); });
-            ToolStripMenuItem clockIn = AddMenu("现在上班", delegate { ClockIn(); });
             AddMenu("重新计时", delegate { Calm("重新计时，先放你一马。"); });
             AddMenu("试抽一次", delegate { TriggerTest(); });
             menu.Items.Add(new ToolStripSeparator());
             AddMenu("设置…", delegate { ShowSettings(); });
             AddMenu("退出", delegate { Close(); });
-            menu.Opening += delegate
-            {
-                bool resting = State.Mode == PetMode.Resting;
-                pause.Text = State.Mode == PetMode.Paused ? "继续提醒" : "暂停提醒";
-                pause.Enabled = !resting; clockOut.Enabled = !resting; clockIn.Enabled = resting;
-            };
             ContextMenuStrip = menu;
             trayIcon = renderer.CreateIcon();
             tray = new NotifyIcon { Icon = trayIcon, Text = "X / WHIP · 右键设置", ContextMenuStrip = menu, Visible = !testing };
@@ -312,29 +296,25 @@ namespace XWhip
         void Say(string text, double seconds) { message = text; messageUntil = clock.Elapsed.TotalSeconds + seconds; speech.ResetIdle(clock.Elapsed.TotalSeconds); }
         internal void TriggerTest()
         {
-            trialOutsideHours = trialOutsideHours || State.Mode == PetMode.Resting;
             shake.Stop();
             Say(null, 0); lastStrike = -100; State.TestWhip(DateTime.UtcNow);
         }
         void Calm(string text)
         {
             shake.Stop();
-            if (trialOutsideHours) { trialOutsideHours = false; State.Rest(DateTime.UtcNow); }
             State.Calm(DateTime.UtcNow); lastStrike = -100;
-            Say(State.Mode == PetMode.Resting ? (text.Contains("+1") ? "今日 +1。下班继续躺。" : "下班免谈，明天再卷。") : text, 2.8); PumpOnce();
+            Say(text, 2.8); PumpOnce();
         }
         void Complete()
         {
             RecordCompletion();
-            if (trialOutsideHours) { Calm("好的老板，我继续躺。"); return; }
-            if (State.Mode == PetMode.Resting) { Say("今日完成 +1，继续躺。", 2); return; }
             shake.Stop();
-            State.Complete(DateTime.UtcNow); lastStrike = -100; celebrationUntil = clock.Elapsed.TotalSeconds + 2; Say("营业完成！好的老板。", 3);
+            State.Calm(DateTime.UtcNow); lastStrike = -100; celebrationUntil = clock.Elapsed.TotalSeconds + 2; Say("记一笔。下一轮继续摸鱼。", 3);
         }
 
         void RecordCompletion()
         {
-            try { progress.RecordClick(WorkLocal(DateTime.UtcNow)); progressSaveFailed = false; }
+            try { progress.RecordClick(BeijingLocal(DateTime.UtcNow)); progressSaveFailed = false; }
             catch (IOException ex) { ProgressFailure(ex); }
             catch (UnauthorizedAccessException ex) { ProgressFailure(ex); }
         }
@@ -345,51 +325,16 @@ namespace XWhip
             if (!testing) MessageBox.Show("本次 +1 已记入，未能保存到磁盘：" + ex.Message, "X / WHIP");
         }
 
-        static DateTime WorkLocal(DateTime utcNow) { return TimeZoneInfo.ConvertTimeFromUtc(utcNow, WorkTimeZone); }
-        internal void ClockOut()
-        {
-            trialOutsideHours = false; shake.Stop();
-            DateTime now = DateTime.UtcNow;
-            manualWorkUntil = null;
-            manualRestUntil = settings.WorkHoursEnabled ? WorkHours.NextStart(WorkLocal(now), settings.WorkStartMinutes) : DateTime.MaxValue;
-            State.Rest(now); lastStrike = -100; celebrationUntil = 0; Say(null, 0); PumpOnce();
-        }
-        internal void ClockIn()
-        {
-            trialOutsideHours = false; shake.Stop();
-            DateTime now = DateTime.UtcNow, local = WorkLocal(now);
-            manualRestUntil = null;
-            DateTime end = local.Date.AddMinutes(settings.WorkEndMinutes);
-            if (end <= local) end = end.AddDays(1);
-            manualWorkUntil = settings.WorkHoursEnabled ? end : DateTime.MaxValue;
-            State.StartWork(now); Say("上班了，先给你一轮冷却。", 3); PumpOnce();
-        }
-        internal void ApplyWorkHours(DateTime utcNow, DateTime localNow)
-        {
-            if (manualRestUntil.HasValue && localNow >= manualRestUntil.Value) manualRestUntil = null;
-            if (manualWorkUntil.HasValue && localNow >= manualWorkUntil.Value) manualWorkUntil = null;
-            if (trialOutsideHours)
-            {
-                if (!settings.WorkHoursEnabled || !WorkHours.IsWorking(localNow, settings.WorkStartMinutes, settings.WorkEndMinutes) || manualRestUntil.HasValue) return;
-                trialOutsideHours = false; shake.Stop(); State.Rest(utcNow);
-            }
-            bool shouldRest = manualRestUntil.HasValue || (!manualWorkUntil.HasValue && settings.WorkHoursEnabled &&
-                !WorkHours.IsWorking(localNow, settings.WorkStartMinutes, settings.WorkEndMinutes));
-            if (shouldRest && State.Mode != PetMode.Resting)
-            { shake.Stop(); State.Rest(utcNow); lastStrike = -100; celebrationUntil = 0; Say(null, 0); }
-            else if (!shouldRest && State.Mode == PetMode.Resting)
-            { State.StartWork(utcNow); Say("上班了，先给你一轮冷却。", 3); }
-        }
+        static DateTime BeijingLocal(DateTime utcNow) { return TimeZoneInfo.ConvertTimeFromUtc(utcNow, DailyTimeZone); }
 
         internal void PumpOnce()
         {
             if (IsDisposed || !IsHandleCreated) return;
             DateTime now = DateTime.UtcNow; double time = clock.Elapsed.TotalSeconds;
             double delta = Math.Min(.1, time - lastFrame); lastFrame = time;
-            try { progress.Refresh(WorkLocal(now)); }
+            try { progress.Refresh(BeijingLocal(now)); }
             catch (IOException ex) { ProgressFailure(ex); }
             catch (UnauthorizedAccessException ex) { ProgressFailure(ex); }
-            ApplyWorkHours(now, WorkLocal(now));
             if (State.Tick(now))
             {
                 lastStrike = time; impactDone = false;
@@ -469,15 +414,11 @@ namespace XWhip
                     if (result == DialogResult.OK || result == DialogResult.Retry)
                     {
                         int previousInterval = settings.IntervalMinutes;
-                        bool changedHours = settings.WorkHoursEnabled != form.Values.WorkHoursEnabled ||
-                            settings.WorkStartMinutes != form.Values.WorkStartMinutes || settings.WorkEndMinutes != form.Values.WorkEndMinutes;
                         settings = form.Values;
                         friendLink.Visible = settings.PromotionEnabled;
                         if (!settings.PromotionEnabled && message != null && message.Contains("卡皮芭拉")) Say(null, 0);
                         if (!settings.ScreenShakeEnabled) shake.Stop();
                         if (settings.IntervalMinutes != previousInterval) State.SetInterval(settings.IntervalMinutes, DateTime.UtcNow);
-                        if (changedHours) { manualRestUntil = null; manualWorkUntil = null; }
-                        ApplyWorkHours(DateTime.UtcNow, WorkLocal(DateTime.UtcNow));
                         ResizePet(); KeepOnScreen();
                         try { settings.Save(); }
                         catch (IOException ex) { SaveFailure(ex); }

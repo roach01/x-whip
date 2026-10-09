@@ -15,9 +15,6 @@ namespace XWhip
         public bool ScreenShakeEnabled = true;
         public bool PromotionEnabled = true;
         public int Size = 180;
-        public bool WorkHoursEnabled = true;
-        public int WorkStartMinutes = 540;
-        public int WorkEndMinutes = 1080;
 
         private static string SettingsPath
         {
@@ -61,13 +58,6 @@ namespace XWhip
         {
             IntervalMinutes = Math.Max(1, Math.Min(180, IntervalMinutes));
             Size = Math.Max(140, Math.Min(240, Size));
-            WorkStartMinutes = Math.Max(0, Math.Min(1439, WorkStartMinutes));
-            WorkEndMinutes = Math.Max(0, Math.Min(1439, WorkEndMinutes));
-            if (WorkStartMinutes == WorkEndMinutes)
-            {
-                WorkStartMinutes = 540;
-                WorkEndMinutes = 1080;
-            }
         }
     }
 
@@ -86,9 +76,6 @@ namespace XWhip
         private readonly CheckBox roam;
         private readonly CheckBox screenShake;
         private readonly CheckBox promotion;
-        private readonly CheckBox workHoursEnabled;
-        private readonly DateTimePicker workStart;
-        private readonly DateTimePicker workEnd;
         private readonly TrackBar sizeSlider;
         private readonly Label sizeValue;
         private readonly CountdownTimeline timeline;
@@ -104,19 +91,11 @@ namespace XWhip
                 Roam = source.Roam,
                 ScreenShakeEnabled = source.ScreenShakeEnabled,
                 PromotionEnabled = source.PromotionEnabled,
-                Size = Math.Max(140, Math.Min(240, source.Size)),
-                WorkHoursEnabled = source.WorkHoursEnabled,
-                WorkStartMinutes = Math.Max(0, Math.Min(1439, source.WorkStartMinutes)),
-                WorkEndMinutes = Math.Max(0, Math.Min(1439, source.WorkEndMinutes))
+                Size = Math.Max(140, Math.Min(240, source.Size))
             };
-            if (Values.WorkStartMinutes == Values.WorkEndMinutes)
-            {
-                Values.WorkStartMinutes = 540;
-                Values.WorkEndMinutes = 1080;
-            }
 
             Text = "X / WHIP · 设置";
-            ClientSize = new Size(520, 680);
+            ClientSize = new Size(520, 580);
             AutoScaleMode = AutoScaleMode.None;
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterScreen;
@@ -129,7 +108,7 @@ namespace XWhip
             Font = bodyFont;
 
             AddLabel("X / WHIP", 28, 18, 420, 45, titleFont, Ink);
-            AddLabel("你的桌面营业监工", 30, 65, 420, 24, bodyFont, Muted);
+            AddLabel("你的桌角摸鱼搭子", 30, 65, 420, 24, bodyFont, Muted);
             Panel divider = new Panel();
             divider.SetBounds(28, 98, 464, 1);
             divider.BackColor = Color.FromArgb(211, 205, 194);
@@ -182,66 +161,27 @@ namespace XWhip
             sizeSlider.ValueChanged += delegate { sizeValue.Text = sizeSlider.Value + " px"; };
             Controls.Add(sizeSlider);
 
-            workHoursEnabled = AddCheckBox("到点下班躺平", 28, 441, Values.WorkHoursEnabled);
-            workHoursEnabled.Font = boldFont;
-            AddLabel("上班", 28, 481, 42, 24, bodyFont, Ink);
-            workStart = AddTimePicker(78, 476, Values.WorkStartMinutes);
-            AddLabel("下班", 207, 481, 42, 24, bodyFont, Ink);
-            workEnd = AddTimePicker(257, 476, Values.WorkEndMinutes);
-            AddLabel("北京时间", 383, 481, 109, 24, smallFont, Muted);
-            workStart.Enabled = workEnd.Enabled = workHoursEnabled.Checked;
-            workHoursEnabled.CheckedChanged += delegate
-            {
-                workStart.Enabled = workEnd.Enabled = workHoursEnabled.Checked;
-            };
-            AddLabel("下班躺下戴墨镜并停止提醒，上班后重新冷却。", 28, 511, 464, 20, smallFont, Muted);
-            AddLabel("每天按同一时段；可跨午夜，例如 22:00–06:00。", 28, 531, 464, 20, smallFont, Muted);
+            AddLabel("点一下记一笔，收鞭后重新冷却。拖动不计数。\n只要开着，他就一直陪你刷 X。", 28, 451, 464, 38, smallFont, Ink);
+            AddLabel("今日记录北京时间零点清零，同日重启保留。\n关注、发帖、回复由你在 X 中手动完成。", 28, 497, 464, 38, smallFont, Muted);
 
-            AddLabel("点击宠物：立即停止抽鞭，重置冷却。\n右键：打开 X、标记完成、暂停。", 28, 564, 464, 38, smallFont, Ink);
-            AddLabel("关注和评论由你在 X 中手动完成。", 28, 605, 464, 20, smallFont, Muted);
-
-            Button cancel = AddButton("取消", 28, 637, 80, 32, false);
+            Button cancel = AddButton("取消", 28, 541, 80, 32, false);
             cancel.DialogResult = DialogResult.Cancel;
-            Button preview = AddButton("试抽一次", 252, 634, 112, 36, false);
-            preview.Click += delegate { if (ReadValues()) DialogResult = DialogResult.Retry; };
-            Button save = AddButton("保存设置", 376, 634, 116, 36, true);
-            save.Click += delegate { if (ReadValues()) DialogResult = DialogResult.OK; };
+            Button preview = AddButton("试抽一次", 252, 538, 112, 36, false);
+            preview.Click += delegate { ReadValues(); DialogResult = DialogResult.Retry; };
+            Button save = AddButton("保存设置", 376, 538, 116, 36, true);
+            save.Click += delegate { ReadValues(); DialogResult = DialogResult.OK; };
             AcceptButton = save;
             CancelButton = cancel;
         }
 
-        private bool ReadValues()
+        private void ReadValues()
         {
-            int start = workStart.Value.Hour * 60 + workStart.Value.Minute;
-            int end = workEnd.Value.Hour * 60 + workEnd.Value.Minute;
-            if (workHoursEnabled.Checked && start == end)
-            {
-                MessageBox.Show(this, "上班和下班时间不能相同，请调整其中一个时间。", "X / WHIP", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                workEnd.Focus();
-                return false;
-            }
             Values.IntervalMinutes = (int)interval.Value;
             Values.Sound = sound.Checked;
             Values.Roam = roam.Checked;
             Values.ScreenShakeEnabled = screenShake.Checked;
             Values.PromotionEnabled = promotion.Checked;
             Values.Size = sizeSlider.Value;
-            Values.WorkHoursEnabled = workHoursEnabled.Checked;
-            Values.WorkStartMinutes = start;
-            Values.WorkEndMinutes = end;
-            return true;
-        }
-
-        private DateTimePicker AddTimePicker(int x, int y, int minutes)
-        {
-            DateTimePicker picker = new DateTimePicker();
-            picker.SetBounds(x, y, 104, 28);
-            picker.Format = DateTimePickerFormat.Custom;
-            picker.CustomFormat = "HH:mm";
-            picker.ShowUpDown = true;
-            picker.Value = new DateTime(2000, 1, 1).AddMinutes(minutes);
-            Controls.Add(picker);
-            return picker;
         }
 
         private Label AddLabel(string text, int x, int y, int width, int height, Font font, Color color)

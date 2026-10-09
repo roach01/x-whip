@@ -4,40 +4,44 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4f1e9">
-  <meta name="description" content="X / WHIP，一个在你桌面闲逛、到点催你上 X、下班先躺平的小应用。真人大头，火柴人身子，六档脾气。">
-  <meta property="og:title" content="X / WHIP — 桌面很小，脾气很大。">
-  <meta property="og:description" content="自己到处闲逛，却总催你上 X 的桌面小闲人。">
+  <meta name="description" content="X / WHIP，上班摸鱼刷 X 的桌面搭子。记得关注、发帖、回复，做完点一下记一笔。真人大头火柴人，六档脾气，开着就一直催。">
+  <meta property="og:title" content="X / WHIP — 上班。摸鱼。刷 X。">
+  <meta property="og:description" content="你刷 X，他在桌角陪着。一个非正式上班搭子。">
   <meta property="og:image" content="https://roach01.github.io/x-whip/assets/rage-levels.png">
-  <title>X / WHIP — 桌面很小，脾气很大。</title>
+  <title>X / WHIP — 上班。摸鱼。刷 X。</title>
   <link rel="icon" href="assets/app.ico">
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=0.5.0">
+  <script src="app.js?v=0.5.0" defer></script>
 </head>
 <body id="top">
   <a class="skip-link" href="#main">跳到正文</a>
-  <div class="page">
+  <div class="page" id="playground">
     <header class="masthead">
       <a class="wordmark" href="#top" aria-label="X / WHIP 首页">X <span>/</span> WHIP</a>
       <nav aria-label="页面导航">
-        <a href="#temper">看看脾气</a>
-        <a href="#off-duty">下班躺平</a>
-        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>下载 ↗</a>
+        <a href="#desk">工位试玩</a>
+        <a href="#temper">脾气表</a>
+        <a href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>下载 ↗</a>
+        <button class="boss-button" id="boss-button" type="button">老板来了 <span aria-hidden="true">↗</span></button>
       </nav>
     </header>
 
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">一个住在 Windows 桌面上的小闲人</p>
-          <h1 id="hero-title">你先刷 <span class="latin">X</span>。<br>他才肯收手。</h1>
-          <p class="lede">真人大头，火柴人身子。<br>自己到处闲逛，却总催你去营业。</p>
-          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>领回桌面 <span aria-hidden="true">↗</span></a>
-          <p class="download-note">Windows 安装版 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.4.0.zip">也有解压即用的便携版 ↗</a></p>
+          <p class="eyebrow">非正式上班搭子 / Windows 桌面宠物</p>
+          <h1 id="hero-title">上班。<br><span class="fish-word">摸鱼。</span><br>刷 <span class="latin">X</span>。</h1>
+          <p class="lede">你刷 X，他在桌角陪着。<br>关注、发帖、回复，别光看热闹。<br>做完点他一下，留个记号。</p>
+          <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>把搭子放到桌面 <span aria-hidden="true">↗</span></a>
+          <p class="download-note">无需 X 登录 · <a class="portable-link" href="https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.5.0.zip">便携版，解压即用 ↗</a></p>
         </div>
-        <div class="pet-stage">
-          <div class="stage-note"><span class="scribble-arrow" aria-hidden="true">↙</span> 点一下，他就怂。</div>
+        <div class="desk-paper" id="desk">
+          <div class="desk-heading"><span>工位观察记录</span><span>NO. 001</span></div>
+          <div class="pet-stage">
+          <div class="ink-stamp" aria-hidden="true">本人在岗<br>精神出差</div>
+          <div class="stage-note">↓ 点大头，记一笔。</div>
           <div class="pet-bubble" id="pet-bubble" role="status" aria-live="polite" hidden></div>
-          <button class="pet" id="pet" data-mood="0" aria-label="点击安抚桌面宠物">
+          <button class="pet" id="pet" data-mood="0" aria-label="点击宠物，记录一笔网页试玩并安抚">
             <svg class="pet-body" viewBox="0 0 340 440" aria-hidden="true">
               <ellipse class="ground" cx="177" cy="404" rx="65" ry="8" />
               <g class="stick-lines">
@@ -54,36 +58,46 @@
             </svg>
             <span class="pet-head" aria-hidden="true"></span>
           </button>
-          <p class="pet-caption"><span class="tiny-dot"></span> 大头负责表情。小身子负责闹。</p>
+          </div>
+          <div class="desk-ledger">
+            <div class="demo-total"><span>本页记了</span><output id="demo-count" aria-live="polite">00</output><span>笔</span></div>
+            <div class="ledger-lines"><p>最近三笔 / 北京时间</p><ol id="demo-log"><li class="empty-log">还没记。点一下大头试试。</li></ol></div>
+          </div>
+          <div class="record-actions" role="group" aria-label="网页手动试玩记录">
+            <button type="button" data-record="关注">关注过了 <span>+</span></button>
+            <button type="button" data-record="发帖">发帖过了 <span>+</span></button>
+            <button type="button" data-record="回复">回复过了 <span>+</span></button>
+          </div>
+          <p class="demo-note">仅网页试玩，刷新归零。与桌面应用的数据分开。<br>这些按钮只记一笔，不会在 X 上执行任何动作。</p>
         </div>
       </section>
 
       <section class="temper" id="temper" aria-labelledby="temper-title">
         <div class="section-intro">
           <p class="eyebrow">六档脾气 · 点数字试试</p>
-          <h2 id="temper-title">越催越上头。<br>你负责叫停。</h2>
+          <h2 id="temper-title">一开始好说话。<br>后来好大一张脸。</h2>
         </div>
         <div class="level-picker" role="group" aria-label="预览六档暴躁程度">
-          <button type="button" data-level="1" aria-pressed="false"><span>01</span>礼貌提醒</button>
-          <button type="button" data-level="2" aria-pressed="false"><span>02</span>眉头一皱</button>
+          <button type="button" data-level="1" aria-pressed="false"><span>01</span>文明提醒</button>
+          <button type="button" data-level="2" aria-pressed="false"><span>02</span>稍微催催</button>
           <button type="button" data-level="3" aria-pressed="false"><span>03</span>有点急了</button>
-          <button type="button" data-level="4" aria-pressed="false"><span>04</span>手舞足蹈</button>
-          <button type="button" data-level="5" aria-pressed="false"><span>05</span>甩出残影</button>
-          <button type="button" data-level="6" aria-pressed="false"><span>06</span>火星级发疯</button>
+          <button type="button" data-level="4" aria-pressed="false"><span>04</span>坐不住了</button>
+          <button type="button" data-level="5" aria-pressed="false"><span>05</span>残影出场</button>
+          <button type="button" data-level="6" aria-pressed="false"><span>06</span>彻底上头</button>
         </div>
         <figure class="app-demo">
-          <video controls playsinline preload="none" poster="assets/rage-levels.png" aria-label="X / WHIP 六档动作演示">
-            <source src="assets/demo.mp4" type="video/mp4">
+          <video controls playsinline preload="none" poster="assets/rage-levels.png?v=0.5.0" aria-label="X / WHIP 六档动作演示">
+            <source src="assets/demo.mp4?v=0.5.0" type="video/mp4">
             你的浏览器暂时无法播放演示视频。
           </video>
-          <figcaption>六档动作演示。点宠物，立刻收手。</figcaption>
+          <figcaption>六档动作演示。上面的数字只换网页表情，不计入记录。</figcaption>
         </figure>
       </section>
 
       <section class="rhythm" aria-labelledby="rhythm-title">
         <div class="rhythm-heading">
-          <h2 id="rhythm-title">15 分钟，<br>一场小型心理活动。</h2>
-          <p>他先摸鱼，再盯你，最后热鞭子。<br>到点开始一鞭一鞭地催。<br>你点他一下，他立刻收手，重新冷却。<br>左键每点一次，今日完成 +1。<br>北京时间零点清零，拖动不算。</p>
+          <h2 id="rhythm-title">15 分钟，<br>桌角开始有动静。</h2>
+          <p>他先摸鱼，再盯你，最后热鞭子。<br>到点就催：关注、发帖、回复，别忘了。<br>刷过 X，点他一下：今日记录 +1。<br>收鞭，重新冷却。开着，就一直这么循环。<br>拖动只是搬家，不计数。</p>
         </div>
         <div class="timeline" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         <ol class="stages">
@@ -92,31 +106,21 @@
           <li><span class="stage-time">12—14 min</span><h3>催促</h3><p>开始坐不住，眉头也坐不住。</p></li>
           <li><span class="stage-time">14—15 min</span><h3>蓄力</h3><p>还有一分钟。手已经痒了。</p></li>
         </ol>
-        <p class="small-note">默认 15 分钟。冷却时间可以设成 1–180 分钟。</p>
-      </section>
-
-      <section class="off-duty" id="off-duty" aria-labelledby="off-duty-title">
-        <div class="off-duty-copy">
-          <p class="eyebrow">他也讲劳动法，至少对自己讲。</p>
-          <h2 id="off-duty-title">下班。<br>火星明天再说。</h2>
-          <p>一到下班时间，戴墨镜，躺下。<br>默认不催。想逗他，下班也能右键试抽。<br>点一下收鞭，再躺回去。<br>第二天上班，再给你完整一轮冷却。</p>
-          <p class="small-note">默认北京时间 09:00–18:00。<br>你可以改时间、设夜班，也可以手动宣布今日下班。</p>
-        </div>
-        <img src="assets/off-duty.png" alt="真人大头火柴人戴着墨镜，舒服地躺在躺椅上，已下班。" width="480" height="440" loading="lazy">
+        <p class="small-note">桌面应用只记录每日总次数，北京时间零点清零，同日重启保留。默认冷却 15 分钟，可设 1–180 分钟。</p>
       </section>
 
       <section class="your-call" aria-labelledby="your-call-title">
         <h2 id="your-call-title">脾气归他。<br>开关归你。</h2>
         <div class="your-call-copy">
           <p><strong>想安静一点？</strong><br>提示音可以关。4–6 级的轻抖动也可以关，不用被闪屏吓一跳。台词偶尔冒出来，说完就走。</p>
-          <p><strong>想清净一点？</strong><br>卡皮芭拉好友推荐也能关。宠物大小、左右闲逛、上下班时间，都在右键设置里。</p>
-          <p class="small-note">他只负责催。关注、发帖、评论，还是你亲自在 X 里做。</p>
+          <p><strong>想清净一点？</strong><br>卡皮芭拉好友推荐也能关。宠物大小、左右闲逛、冷却时长，都在右键设置里。</p>
+          <p class="small-note">无需 X 登录。关注、发帖、回复由你自己做，应用不会读取或代操作账号。左键和右键“完成一次互动”都会记 +1。</p>
         </div>
       </section>
 
       <section class="take-home" aria-labelledby="take-home-title">
-        <div><p class="eyebrow">桌面很小，脾气很大。</p><h2 id="take-home-title">给他找个桌面。</h2></div>
-        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.4.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
+        <div><p class="eyebrow">人在上班。心有搭子。</p><h2 id="take-home-title">现在，桌角见。</h2></div>
+        <a class="download-button" href="https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.5.0.exe" data-download>下载 X / WHIP <span aria-hidden="true">↗</span></a>
       </section>
     </main>
 
@@ -127,5 +131,23 @@
       <a href="#top">回到上面 ↑</a>
     </footer>
   </div>
+  <section class="boss-view" id="boss-view" role="dialog" aria-modal="true" aria-labelledby="report-title" hidden>
+    <header class="report-toolbar"><span><span class="sheet-icon" aria-hidden="true">▦</span> 工作台 / 数据简报</span><button id="return-button" type="button">返回试玩 <kbd>Esc</kbd></button></header>
+    <div class="report-page">
+      <p class="report-breadcrumb">资料 / 部门周报 / 本周</p>
+      <div class="report-title-row"><div><h1 id="report-title">本周互联网关系维护简报</h1><p>任务概况、阶段产出与后续安排</p></div><span class="report-tag">持续跟进</span></div>
+      <div class="report-meta"><span>负责人：本人</span><span>更新时间：<time id="report-time">—</time></span><span>状态：待归档</span></div>
+      <div class="report-summary"><div><span>跟踪方向</span><strong>03</strong></div><div><span>手动记录</span><strong id="report-count">00</strong></div><div><span>后续事项</span><strong>02</strong></div></div>
+      <h2>本周事项明细</h2>
+      <div class="report-table-wrap"><table><thead><tr><th>事项</th><th>当前进度</th><th>阶段产出</th><th>后续安排</th><th>负责人</th></tr></thead><tbody>
+        <tr><td>外部内容跟踪</td><td><span class="report-status">进行中</span></td><td>资料整理与热点归档</td><td>补充高频议题</td><td>本人</td></tr>
+        <tr><td>关系维护</td><td><span class="report-status">进行中</span></td><td>手动记录 <span id="report-inline-count">0</span> 笔</td><td>继续跟进有效回复</td><td>本人</td></tr>
+        <tr><td>内容准备</td><td>待补充</td><td>草稿梳理</td><td>形成下一条发布计划</td><td>本人</td></tr>
+        <tr><td>时间安排</td><td>已确认</td><td>检查时间窗口</td><td>按当前节奏推进</td><td>本人</td></tr>
+      </tbody></table></div>
+      <div class="report-notes"><h2>待办与备注</h2><p>01　继续补充外部反馈，整理可复用素材。</p><p>02　根据本周记录，确认下一步安排。</p></div>
+      <p class="report-footnote">示例周报，仅网页彩蛋，未连接办公系统。按 Esc 或右上角“返回试玩”恢复。</p>
+    </div>
+  </section>
 </body>
 </html>

@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.4.0"
+  #define AppVersion "0.5.0"
 #endif
 [Setup]
 AppId={{D4E2F5D2-191C-4E90-92A8-32AE956A0581}
@@ -33,4 +33,4 @@ Source: "..\assets\PHOTO-CREDITS.md"; DestDir: "{app}"; Flags: ignoreversion
 Name: "{group}\X WHIP"; Filename: "{app}\XWhip.exe"
 Name: "{autodesktop}\X WHIP"; Filename: "{app}\XWhip.exe"; Tasks: desktopicon
 [Run]
-Filename: "{app}\XWhip.exe"; Description: "Let him clock in"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\XWhip.exe"; Description: "Put him on the desktop"; Flags: nowait postinstall skipifsilent

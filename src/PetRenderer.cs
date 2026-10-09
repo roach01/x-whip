@@ -111,12 +111,10 @@ namespace XWhip
                 if (walking && mayWalk) frozenWalkPhase = walkPhase;
                 walkPhase = frozenWalkPhase;
                 walking = mayWalk && walkBlend > 0;
-                if (state.Mode == PetMode.Resting) { DrawRest(g, time, message, dailyCount); return frame; }
                 int stage = state.CountdownStage(now);
                 bool whip = state.Mode == PetMode.Whipping;
-                bool paused = state.Mode == PetMode.Paused;
                 double swing = strikeAge >= 0 && strikeAge < .5 ? Math.Sin(strikeAge / .5 * Math.PI) : 0;
-                walking = walking && !paused && !whip;
+                walking = walking && !whip;
                 float bounce = walking ? -(float)Math.Abs(Math.Sin(walkPhase * 2)) * 1.5f * walkBlend : 0;
                 if (celebration) bounce -= (float)(Math.Abs(Math.Sin(time * 5)) * 18);
                 int variant = Math.Max(0, state.StrikeCount - 1) % 8;
@@ -193,8 +191,8 @@ namespace XWhip
                 }
 
                 int[] relaxed = { 0, 1, 2, 8, 10, 11, 9 }, furious = { 5, 6, 7, 13, 14, 15 };
-                int expression = paused ? 1 : whip ? furious[Math.Min(5, state.AngerLevel - 1)] : stage == 0 ? relaxed[(int)(time / 12) % relaxed.Length] : stage == 1 ? ((int)(time / 10) % 2 == 0 ? 3 : 9) : stage == 2 ? ((int)(time / 10) % 3 == 2 ? 13 : 4 + (int)(time / 10) % 2) : ((int)(time / 10) % 2 == 0 ? 6 : 12);
-                if (!whip && !paused && !String.IsNullOrEmpty(message) && (celebration || message.Contains("收手") || message.Contains("放你"))) expression = 0;
+                int expression = whip ? furious[Math.Min(5, state.AngerLevel - 1)] : stage == 0 ? relaxed[(int)(time / 12) % relaxed.Length] : stage == 1 ? ((int)(time / 10) % 2 == 0 ? 3 : 9) : stage == 2 ? ((int)(time / 10) % 3 == 2 ? 13 : 4 + (int)(time / 10) % 2) : ((int)(time / 10) % 2 == 0 ? 6 : 12);
+                if (!whip && !String.IsNullOrEmpty(message) && (celebration || message.Contains("收手") || message.Contains("放你"))) expression = 0;
                 Rectangle cell = faceRects[expression];
                 float lean = whip ? (float)swing * 5 : facing * 3;
                 float headHeight = 128;
@@ -217,8 +215,7 @@ namespace XWhip
                 DrawBubble(g, message, HeadBounds(headCorners), whip ? new RectangleF(-164, -140, 640, 420) : new RectangleF(0, -bounce, 320, 280));
 
                 string status;
-                if (paused) status = "ZZZ  ·  已暂停";
-                else if (whip) status = "暴躁 " + state.AngerLevel + "/6  ·  点击安抚";
+                if (whip) status = "暴躁 " + state.AngerLevel + "/6  ·  点击安抚";
                 else
                 {
                     TimeSpan remaining = state.Remaining(now);
@@ -226,7 +223,7 @@ namespace XWhip
                     status = names[Math.Min(stage, 3)] + "  ·  " + ((int)remaining.TotalMinutes).ToString("00") + ":" + remaining.Seconds.ToString("00");
                 }
                 float statusY = whip ? 260 : 263;
-                DrawFooter(g, status + "  ·  今日完成 " + dailyCount, mood, statusY);
+                DrawFooter(g, status + "  ·  今日记录 " + dailyCount, mood, statusY);
                 if (!whip && swing > .5)
                 {
                     using (Pen impact = new Pen(Orange, 3))
@@ -380,39 +377,6 @@ namespace XWhip
             using (Brush ink = new SolidBrush(Color.FromArgb(alpha, Ink)))
             using (StringFormat centered = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
                 g.DrawString(level >= 5 ? "啪!!!" : level >= 3 ? "啪!!" : "啪!", font, ink, new RectangleF(impactX - radius, 323 - radius, radius * 2, radius * 2), centered);
-        }
-
-        void DrawRest(Graphics g, double time, string message, int dailyCount)
-        {
-            float breath = (float)Math.Sin(time * 1.7) * 1.4f;
-            using (Brush pad = new SolidBrush(Color.FromArgb(236, 221, 191))) g.FillEllipse(pad, 78, 215, 208, 30);
-            using (Pen pen = new Pen(Ink, 4.5f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
-            {
-                g.DrawLines(pen, new PointF[] { new PointF(86, 225), new PointF(268, 225), new PointF(279, 205) });
-                g.DrawLine(pen, 110, 225, 102, 248); g.DrawLine(pen, 249, 225, 260, 247);
-                g.DrawLine(pen, 143, 204 + breath, 223, 208 + breath);
-                g.DrawLines(pen, new PointF[] { new PointF(166, 205 + breath), new PointF(153, 182), new PointF(122, 185) });
-                g.DrawLines(pen, new PointF[] { new PointF(178, 206 + breath), new PointF(165, 190), new PointF(131, 193) });
-                g.DrawLines(pen, new PointF[] { new PointF(223, 208 + breath), new PointF(249, 186), new PointF(270, 207) });
-                g.DrawLines(pen, new PointF[] { new PointF(223, 208 + breath), new PointF(249, 220), new PointF(277, 216) });
-                g.DrawLine(pen, 268, 207, 281, 205); g.DrawLine(pen, 276, 216, 286, 209);
-            }
-            GraphicsState head = g.Save(); g.TranslateTransform(119, 169 + breath); g.RotateTransform(-55);
-            Rectangle cell = faceRects[0]; float width = 112f * cell.Width / cell.Height;
-            g.DrawImage(faces, new RectangleF(-width / 2, -56, width, 112), cell, GraphicsUnit.Pixel);
-            using (Brush lenses = new SolidBrush(Color.FromArgb(248, 14, 16, 20))) { g.FillRectangle(lenses, -30, -5, 27, 17); g.FillRectangle(lenses, 3, -5, 27, 17); }
-            using (Pen rim = new Pen(Ink, 3)) { g.DrawLine(rim, -35, -5, 35, -5); g.DrawLine(rim, -3, 1, 3, 1); }
-            using (Pen shine = new Pen(Color.FromArgb(125, 255, 255, 255), 2)) { g.DrawLine(shine, -25, -1, -18, -1); g.DrawLine(shine, 8, -1, 15, -1); }
-            PointF[] headCorners = { new PointF(-width / 2, -56), new PointF(width / 2, -56), new PointF(-width / 2, 56), new PointF(width / 2, 56) };
-            using (Matrix transform = g.Transform) transform.TransformPoints(headCorners);
-            g.Restore(head);
-            using (Matrix transform = g.Transform) { transform.Invert(); transform.TransformPoints(headCorners); }
-            DrawBubble(g, message, HeadBounds(headCorners), new RectangleF(0, 0, 320, 280));
-            using (Font font = new Font("Microsoft YaHei", 10, FontStyle.Bold))
-            using (Brush ink = new SolidBrush(Ink))
-            using (StringFormat centered = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-                g.DrawString("Z z z", font, ink, new RectangleF(235, 115 + breath, 76, 22), centered);
-            DrawFooter(g, "OFF DUTY · 已下班  ·  今日完成 " + dailyCount, Ink, 263);
         }
 
         internal static GraphicsPath Rounded(RectangleF rect, float radius)

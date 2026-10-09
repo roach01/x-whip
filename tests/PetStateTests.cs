@@ -15,25 +15,17 @@ internal static class PetStateTests
             Run("Strike delays, escalation, and anger cap", StrikeEscalation);
             Run("Large time jumps emit one strike per tick", LargeTimeJump);
             Run("Calm resets full cooldown and strikes", CalmReset);
-            Run("Cooling pause freezes and restores remaining time", CoolingPause);
-            Run("Whipping pause resumes full cooldown", WhippingPause);
             Run("Cooling interval changes restart timer", CoolingInterval);
             Run("Whipping interval changes preserve strike schedule", WhippingInterval);
-            Run("Paused interval changes update saved remaining time", PausedInterval);
             Run("Test whip emits on next tick", ManualWhip);
-            Run("Complete increments count and calms", Completion);
             Run("Default cooldown stage boundaries", DefaultStages);
             Run("Custom cooldown stages scale proportionally", CustomStages);
-            Run("Paused and whipping stage overrides", ModeStages);
-            Run("Rest interrupts whipping immediately", RestInterruptsWhipping);
-            Run("Resting actions cannot wake or count", RestingActions);
-            Run("Resting can explicitly test whip", RestingTestWhip);
-            Run("Rest clears a paused cooldown", RestFromPause);
-            Run("Start work creates a new full cooldown", StartWorkCooldown);
-            Run("Resting interval changes apply on next work start", RestingInterval);
-            Run("Daytime work hours include start and exclude end", DaytimeWorkHours);
-            Run("Overnight work hours cross midnight", OvernightWorkHours);
-            Run("Next work start is strictly after the current instant", NextWorkStart);
+            Run("Whipping countdown stage and calm reset", ModeStages);
+            Run("Repeated calm restarts a running cooldown", RepeatedCalm);
+            Run("Cooldown and whipping continue across midnight", AcrossMidnight);
+            Run("Beijing evening continues cooldown and whipping", BeijingEvening);
+            Run("Beijing midnight preserves cooldown deadline", BeijingMidnight);
+            Run("Changing interval preserves maximum rage", MaximumRageInterval);
             Console.WriteLine("PASS: " + passed + " tests");
             return 0;
         }
@@ -62,7 +54,6 @@ internal static class PetStateTests
         var state = new PetState(15, Start);
         Equal(PetMode.Cooling, state.Mode, "mode");
         Equal(0, state.StrikeCount, "strikes");
-        Equal(0, state.CompletedCount, "completions");
         Equal(1, state.AngerLevel, "anger");
         Equal(Start.AddMinutes(15), state.NextDueUtc, "deadline");
         Equal(TimeSpan.FromMinutes(15), state.Remaining(Start), "remaining");
@@ -124,34 +115,6 @@ internal static class PetStateTests
         Equal(false, state.Tick(now), "calm no strike");
     }
 
-    private static void CoolingPause()
-    {
-        var state = new PetState(15, Start);
-        state.TogglePause(Start.AddMinutes(5));
-        Equal(PetMode.Paused, state.Mode, "pause mode");
-        Equal(TimeSpan.FromMinutes(10), state.Remaining(Start.AddDays(1)), "frozen remaining");
-        Equal(false, state.Tick(Start.AddDays(1)), "no paused strike");
-        DateTime resume = Start.AddDays(1);
-        state.TogglePause(resume);
-        Equal(PetMode.Cooling, state.Mode, "resume mode");
-        Equal(resume.AddMinutes(10), state.NextDueUtc, "saved remaining");
-        Equal(false, state.Tick(resume.AddMinutes(10).AddTicks(-1)), "before resumed deadline");
-        Equal(true, state.Tick(resume.AddMinutes(10)), "resumed deadline");
-    }
-
-    private static void WhippingPause()
-    {
-        var state = new PetState(15, Start);
-        state.TestWhip(Start);
-        state.Tick(Start);
-        state.TogglePause(Start.AddSeconds(1));
-        DateTime resume = Start.AddHours(1);
-        state.TogglePause(resume);
-        Equal(PetMode.Cooling, state.Mode, "whipping resumes cooling");
-        Equal(0, state.StrikeCount, "resume clears strikes");
-        Equal(TimeSpan.FromMinutes(15), state.Remaining(resume), "resume full interval");
-    }
-
     private static void CoolingInterval()
     {
         var state = new PetState(15, Start);
@@ -177,17 +140,6 @@ internal static class PetStateTests
         Equal(TimeSpan.FromMinutes(5), state.Remaining(Start.AddSeconds(4)), "new interval on calm");
     }
 
-    private static void PausedInterval()
-    {
-        var state = new PetState(15, Start);
-        state.TogglePause(Start.AddMinutes(2));
-        state.SetInterval(8, Start.AddMinutes(3));
-        Equal(PetMode.Paused, state.Mode, "still paused");
-        Equal(TimeSpan.FromMinutes(8), state.Remaining(Start.AddHours(1)), "new saved interval");
-        state.TogglePause(Start.AddHours(2));
-        Equal(Start.AddHours(2).AddMinutes(8), state.NextDueUtc, "new resume deadline");
-    }
-
     private static void ManualWhip()
     {
         var state = new PetState(15, Start);
@@ -197,22 +149,10 @@ internal static class PetStateTests
         Equal(true, state.Tick(Start.AddMinutes(1)), "next tick strike");
         state.TestWhip(Start.AddMinutes(2));
         Equal(0, state.StrikeCount, "manual reset");
-    }
-
-    private static void Completion()
-    {
-        var state = new PetState(15, Start);
-        state.TestWhip(Start);
-        state.Tick(Start);
-        state.Complete(Start.AddSeconds(1));
-        Equal(1, state.CompletedCount, "first completion");
-        Equal(PetMode.Cooling, state.Mode, "complete mode");
-        Equal(0, state.StrikeCount, "complete clears strikes");
-        Equal(Start.AddSeconds(1).AddMinutes(15), state.NextDueUtc, "complete deadline");
-        state.Calm(Start.AddSeconds(2));
-        Equal(1, state.CompletedCount, "calm does not count completion");
-        state.Complete(Start.AddSeconds(3));
-        Equal(2, state.CompletedCount, "second completion");
+        Equal(PetMode.Whipping, state.Mode, "repeated test remains whipping");
+        Equal(true, state.Tick(Start.AddMinutes(2)), "repeated test emits next tick");
+        Equal(1, state.StrikeCount, "repeated test resets escalation");
+        Equal(false, state.Tick(Start.AddMinutes(2)), "repeated test does not duplicate instant strike");
     }
 
     private static void DefaultStages()
@@ -245,135 +185,85 @@ internal static class PetStateTests
     private static void ModeStages()
     {
         var state = new PetState(15, Start);
-        state.TogglePause(Start.AddMinutes(14));
-        Equal(0, state.CountdownStage(Start.AddDays(1)), "paused stage");
         state.TestWhip(Start.AddDays(1));
         Equal(4, state.CountdownStage(Start.AddDays(1)), "whipping stage");
+        state.Calm(Start.AddDays(1));
+        Equal(0, state.CountdownStage(Start.AddDays(1)), "calm returns initial stage");
     }
 
-    private static void RestInterruptsWhipping()
+    private static void RepeatedCalm()
+    {
+        var state = new PetState(15, Start);
+        state.Calm(Start.AddMinutes(10));
+        Equal(Start.AddMinutes(25), state.NextDueUtc, "calm while cooling restarts interval");
+        Equal(false, state.Tick(Start.AddMinutes(15)), "old deadline no longer triggers");
+        Equal(true, state.Tick(Start.AddMinutes(25)), "new deadline triggers");
+        state.Calm(Start.AddMinutes(26));
+        Equal(PetMode.Cooling, state.Mode, "calm after whipping returns cooling");
+        Equal(0, state.StrikeCount, "calm clears prior strikes");
+        Equal(Start.AddMinutes(41), state.NextDueUtc, "next complete cooldown");
+    }
+
+    private static void AcrossMidnight()
+    {
+        DateTime late = new DateTime(2026, 10, 9, 23, 58, 0, DateTimeKind.Utc);
+        var state = new PetState(15, late);
+        Equal(PetMode.Cooling, state.Mode, "late hours still start cooling");
+        Equal(false, state.Tick(late.AddMinutes(15).AddTicks(-1)), "midnight does not skip cooldown");
+        Equal(true, state.Tick(late.AddMinutes(15)), "deadline after midnight starts whipping");
+        Equal(PetMode.Whipping, state.Mode, "whipping after midnight");
+        Equal(true, state.Tick(late.AddDays(1)), "whipping continues next day");
+        Equal(PetMode.Whipping, state.Mode, "no time-of-day resting state");
+        Equal(2, state.StrikeCount, "long jump emits a single additional strike");
+    }
+
+    private static void BeijingEvening()
+    {
+        DateTime evening = new DateTime(2026, 10, 9, 10, 5, 0, DateTimeKind.Utc); // Beijing 18:05.
+        var state = new PetState(15, evening);
+        DateTime due = new DateTime(2026, 10, 9, 10, 20, 0, DateTimeKind.Utc);
+        Equal(false, state.Tick(due.AddTicks(-1)), "evening before deadline");
+        Equal(true, state.Tick(due), "Beijing 18:20 still starts whipping");
+        Equal(PetMode.Whipping, state.Mode, "evening remains active");
+        Equal(true, state.Tick(due.AddSeconds(3.2)), "evening continues whipping");
+        state.Calm(due.AddMinutes(1));
+        Equal(true, state.Tick(due.AddMinutes(16)), "evening calm starts another full cycle");
+    }
+
+    private static void BeijingMidnight()
+    {
+        DateTime late = new DateTime(2026, 10, 9, 15, 50, 0, DateTimeKind.Utc); // Beijing 23:50.
+        DateTime midnight = new DateTime(2026, 10, 9, 16, 0, 0, DateTimeKind.Utc);
+        DateTime due = new DateTime(2026, 10, 9, 16, 5, 0, DateTimeKind.Utc);
+        var state = new PetState(15, late);
+        Equal(false, state.Tick(midnight), "Beijing date change does not emit early");
+        Equal(PetMode.Cooling, state.Mode, "Beijing midnight remains cooling");
+        Equal(due, state.NextDueUtc, "Beijing midnight preserves original deadline");
+        Equal(TimeSpan.FromMinutes(5), state.Remaining(midnight), "Beijing midnight keeps remaining time");
+        Equal(false, state.Tick(due.AddTicks(-1)), "before next Beijing day's deadline");
+        Equal(true, state.Tick(due), "Beijing 00:05 starts whipping");
+        Equal(true, state.Tick(due.AddSeconds(3.2)), "whipping continues after Beijing midnight");
+    }
+
+    private static void MaximumRageInterval()
     {
         var state = new PetState(15, Start);
         state.TestWhip(Start);
-        state.Tick(Start);
-        state.Tick(Start.AddSeconds(3.2));
-        state.Rest(Start.AddSeconds(4));
-        Equal(PetMode.Resting, state.Mode, "rest mode");
-        Equal(0, state.StrikeCount, "rest clears strikes");
-        Equal(DateTime.MaxValue, state.NextDueUtc, "rest has no deadline");
-        Equal(TimeSpan.Zero, state.Remaining(Start.AddDays(1)), "rest remaining");
-        Equal(0, state.CountdownStage(Start.AddDays(1)), "rest countdown stage");
-        Equal(false, state.Tick(Start.AddDays(1)), "rest stops strikes");
-    }
-
-    private static void RestingActions()
-    {
-        var state = new PetState(15, Start);
-        state.Complete(Start);
-        state.Rest(Start.AddMinutes(1));
-        Action<DateTime>[] actions = { state.Calm, state.TogglePause, state.Complete };
-        for (int index = 0; index < actions.Length; index++)
+        DateTime now = Start;
+        for (int count = 1; count <= 16; count++)
         {
-            DateTime now = Start.AddMinutes(index + 2);
-            actions[index](now);
-            Equal(PetMode.Resting, state.Mode, "action stays resting " + index);
-            Equal(1, state.CompletedCount, "action preserves count " + index);
-            Equal(0, state.StrikeCount, "action preserves zero strikes " + index);
-            Equal(DateTime.MaxValue, state.NextDueUtc, "action preserves no deadline " + index);
-            Equal(false, state.Tick(now), "action cannot emit strike " + index);
+            state.Tick(now);
+            if (count < 16) now = now.AddSeconds(4);
         }
-    }
-
-    private static void RestingTestWhip()
-    {
-        var state = new PetState(15, Start);
-        state.Rest(Start);
-        state.TestWhip(Start.AddSeconds(1));
-        Equal(PetMode.Whipping, state.Mode, "explicit rest test enters whipping");
-        Equal(0, state.StrikeCount, "test resets strikes");
-        Equal(true, state.Tick(Start.AddSeconds(1)), "test emits on next tick");
-        Equal(1, state.StrikeCount, "test first strike");
-        Equal(0, state.CompletedCount, "test does not record completion");
-    }
-
-    private static void RestFromPause()
-    {
-        var state = new PetState(15, Start);
-        state.TogglePause(Start.AddMinutes(5));
-        state.Rest(Start.AddMinutes(6));
-        state.TogglePause(Start.AddMinutes(7));
-        Equal(PetMode.Resting, state.Mode, "pause toggle cannot restore old mode");
-        state.StartWork(Start.AddMinutes(8));
-        Equal(TimeSpan.FromMinutes(15), state.Remaining(Start.AddMinutes(8)), "old paused remaining discarded");
-    }
-
-    private static void StartWorkCooldown()
-    {
-        var state = new PetState(15, Start);
-        state.Rest(Start.AddMinutes(4));
-        DateTime now = Start.AddDays(2);
-        state.StartWork(now);
-        Equal(PetMode.Cooling, state.Mode, "start work mode");
-        Equal(TimeSpan.FromMinutes(15), state.Remaining(now), "start full remaining");
-        Equal(now.AddMinutes(15), state.NextDueUtc, "start fresh deadline");
-        state.StartWork(now.AddMinutes(1));
-        Equal(now.AddMinutes(15), state.NextDueUtc, "redundant work start preserves running timer");
-        Equal(false, state.Tick(now.AddMinutes(15).AddTicks(-1)), "before new deadline");
-        Equal(true, state.Tick(now.AddMinutes(15)), "new deadline strike");
-    }
-
-    private static void RestingInterval()
-    {
-        var state = new PetState(15, Start);
-        state.Rest(Start);
-        state.SetInterval(5, Start.AddMinutes(1));
-        Equal(PetMode.Resting, state.Mode, "interval does not wake");
-        Equal(5, state.IntervalMinutes, "rest interval updated");
-        Equal(DateTime.MaxValue, state.NextDueUtc, "interval does not create deadline");
-        Equal(TimeSpan.Zero, state.Remaining(Start.AddMinutes(1)), "interval no rest countdown");
-        DateTime workStart = Start.AddHours(1);
-        state.StartWork(workStart);
-        Equal(workStart.AddMinutes(5), state.NextDueUtc, "updated interval used on wake");
-        state.Rest(workStart);
-        state.SetInterval(300, workStart);
-        Equal(180, state.IntervalMinutes, "rest interval clamps");
-        state.StartWork(workStart.AddHours(1));
-        Equal(TimeSpan.FromMinutes(180), state.Remaining(workStart.AddHours(1)), "clamped interval used on wake");
-    }
-
-    private static void DaytimeWorkHours()
-    {
-        DateTime day = Start.Date;
-        Equal(false, WorkHours.IsWorking(day.AddHours(9).AddTicks(-1), 540, 1080), "before start");
-        Equal(true, WorkHours.IsWorking(day.AddHours(9), 540, 1080), "at start");
-        Equal(true, WorkHours.IsWorking(day.AddHours(18).AddTicks(-1), 540, 1080), "before end");
-        Equal(false, WorkHours.IsWorking(day.AddHours(18), 540, 1080), "at end");
-        Equal(false, WorkHours.IsWorking(day.AddHours(23), 540, 1080), "after end");
-    }
-
-    private static void OvernightWorkHours()
-    {
-        DateTime day = Start.Date;
-        Equal(false, WorkHours.IsWorking(day.AddHours(22).AddTicks(-1), 1320, 360), "before overnight start");
-        Equal(true, WorkHours.IsWorking(day.AddHours(22), 1320, 360), "at overnight start");
-        Equal(true, WorkHours.IsWorking(day.AddDays(1), 1320, 360), "after midnight");
-        Equal(true, WorkHours.IsWorking(day.AddDays(1).AddHours(6).AddTicks(-1), 1320, 360), "before overnight end");
-        Equal(false, WorkHours.IsWorking(day.AddDays(1).AddHours(6), 1320, 360), "at overnight end");
-        Equal(false, WorkHours.IsWorking(day.AddHours(12), 1320, 360), "overnight midday rest");
-        Equal(true, WorkHours.IsWorking(day.AddHours(23), 1320, 0), "shift ending at midnight");
-        Equal(false, WorkHours.IsWorking(day.AddDays(1), 1320, 0), "midnight end excluded");
-    }
-
-    private static void NextWorkStart()
-    {
-        DateTime day = Start.Date;
-        DateTime nine = day.AddHours(9);
-        Equal(nine, WorkHours.NextStart(nine.AddTicks(-1), 540), "before start returns today");
-        Equal(nine.AddDays(1), WorkHours.NextStart(nine, 540), "exact start returns tomorrow");
-        Equal(nine.AddDays(1), WorkHours.NextStart(nine.AddSeconds(1), 540), "after start returns tomorrow");
-        Equal(day.AddHours(22), WorkHours.NextStart(day.AddHours(6), 1320), "overnight next start today");
-        Equal(day.AddDays(1), WorkHours.NextStart(day, 0), "midnight start strictly next day");
-        DateTime yearEnd = new DateTime(2026, 12, 31, 23, 0, 0);
-        Equal(new DateTime(2027, 1, 1, 9, 0, 0), WorkHours.NextStart(yearEnd, 540), "year rollover");
+        Equal(6, state.AngerLevel, "sixth level starts at strike sixteen");
+        state.SetInterval(300, now);
+        Equal(180, state.IntervalMinutes, "upper interval clamp");
+        Equal(PetMode.Whipping, state.Mode, "interval change keeps whipping");
+        Equal(16, state.StrikeCount, "interval change keeps strike count");
+        Equal(6, state.AngerLevel, "interval change keeps maximum rage");
+        Equal(false, state.Tick(now.AddSeconds(0.8).AddTicks(-1)), "preserved maximum rage delay");
+        Equal(true, state.Tick(now.AddSeconds(0.8)), "next maximum rage strike");
+        state.Calm(now.AddSeconds(1));
+        Equal(TimeSpan.FromMinutes(180), state.Remaining(now.AddSeconds(1)), "new interval used when calmed");
     }
 }
