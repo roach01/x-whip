@@ -13,6 +13,13 @@ namespace XWhip
     {
         public const double ImpactSeconds = .64;
         public const double Duration = 1.3;
+        static readonly int[] ShownVariants = { 0, 1, 2, 3, 5, 6, 7 };
+
+        public static int PlayVariant(int strikeCount)
+        {
+            int index = Math.Max(0, strikeCount - 1);
+            return ShownVariants[index % ShownVariants.Length];
+        }
 
         public static WhipPose Sample(int variant, int level, double age)
         {

@@ -50,7 +50,7 @@ namespace XWhip
                 }
                 board.Save(Path.Combine(folder, "countdown-stages.png"), ImageFormat.Png);
                 string framesFolder = Path.Combine(folder, "frames"); Directory.CreateDirectory(framesFolder);
-                string[] poses = { "后肩甩", "弓步横抽", "双手劈下", "跺脚催促", "反抽自己", "拽得一跳", "挂上 X 牌", "缠脚蹦跶" };
+                string[] poses = { "后肩甩", "弓步横抽", "双手劈下", "跺脚催促", "拽得一跳", "挂上 X 牌", "缠脚蹦跶", "后肩甩" };
                 using (Bitmap gallery = new Bitmap(2400, 880))
                 using (Graphics galleryGraphics = Graphics.FromImage(gallery))
                 using (Font label = new Font("Microsoft YaHei", 14, FontStyle.Bold))
@@ -123,8 +123,8 @@ namespace XWhip
                 }
             }
             string gagFrames = Path.Combine(folder, "gags"); Directory.CreateDirectory(gagFrames);
-            int[] gagStrikes = { 5, 8, 7 };
-            string[] gagCaptions = { "催你刷 X。先抽到自己。", "不刷 X？腿也别要了。", "业务挂钩。物理意义上的。" };
+            int[] gagStrikes = { 2, 7, 6 };
+            string[] gagCaptions = { "催你刷 X。", "不刷 X？腿也别要了。", "业务挂钩。物理意义上的。" };
             for (int scene = 0; scene < gagStrikes.Length; scene++)
             using (PetRenderer renderer = new PetRenderer())
             {
@@ -417,7 +417,7 @@ namespace XWhip
             }
             if (canvasMode != State.Mode) { ResizePet(); KeepOnScreen(); }
             double strikeAge = time - lastStrike;
-            int strikeVariant = (State.StrikeCount - 1) % 8;
+            int strikeVariant = WhipChoreography.PlayVariant(State.StrikeCount);
             double impactTime = strikeVariant == 4 || strikeVariant == 6 || strikeVariant == 7 ? .78 : WhipChoreography.ImpactSeconds;
             if (!soundDone && State.Mode == PetMode.Whipping && strikeAge >= impactTime - .13 && strikeAge < impactTime + .3)
             {

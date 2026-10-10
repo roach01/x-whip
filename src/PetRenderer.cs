@@ -243,7 +243,7 @@ namespace XWhip
         void RenderWhipping(Graphics g, PetState state, double time, double age, string message, int dailyCount)
         {
             age = Math.Max(0, age);
-            int variant = Math.Max(0, state.StrikeCount - 1) % 8;
+            int variant = WhipChoreography.PlayVariant(state.StrikeCount);
             WhipPose pose = WhipChoreography.Sample(variant, state.AngerLevel, age);
             float length = 145 + (state.AngerLevel - 1) * 17;
             if (!wasWhipping || time <= ropeTime)
@@ -283,8 +283,7 @@ namespace XWhip
                 g.DrawLine(handle, new PointF(pose.Hand.X - pose.HandleDirection.X * 5, pose.Hand.Y - pose.HandleDirection.Y * 5), pose.HandleTip);
             int[] furious = { 5, 6, 7, 13, 14, 15 };
             int expression = furious[Math.Min(5, state.AngerLevel - 1)];
-            if (variant >= 4 && age >= .78 && age < 1.16) expression = 9;
-            if (variant == 4 && age >= 1.16 && age < 1.82) expression = 2;
+            if (variant >= 5 && age >= .78 && age < 1.16) expression = 9;
             Rectangle cell = faceRects[expression];
             float headWidth = 128f * cell.Width / cell.Height;
             GraphicsState head = g.Save();
@@ -299,14 +298,7 @@ namespace XWhip
                 PointF[] front = new PointF[8]; Array.Copy(shape, shape.Length - front.Length, front, 0, front.Length);
                 DrawRope(g, front, Color.FromArgb(79, 47, 29), true);
             }
-            if (variant == 4 && age >= 1.16 && age <= 1.82)
-            {
-                RectangleF phone = new RectangleF(pose.FreeHand.X - 8, pose.FreeHand.Y - 23, 17, 26);
-                using (Brush black = new SolidBrush(Ink)) g.FillRectangle(black, phone);
-                using (Font font = new Font("Consolas", 11, FontStyle.Bold))
-                using (Brush white = new SolidBrush(Color.White)) g.DrawString("X", font, white, phone.X + 2, phone.Y + 2);
-            }
-            double impactTime = variant == 4 || variant == 6 || variant == 7 ? .78 : WhipChoreography.ImpactSeconds;
+            double impactTime = variant == 6 || variant == 7 ? .78 : WhipChoreography.ImpactSeconds;
             if (age >= impactTime && age < impactTime + .16)
             {
                 PointF tip = shape[shape.Length - 1];
@@ -318,7 +310,7 @@ namespace XWhip
                 }
                 using (Font font = new Font("Microsoft YaHei", 14, FontStyle.Bold))
                 using (Brush ink = new SolidBrush(Color.FromArgb(alpha, Ink)))
-                    g.DrawString(variant == 4 ? "啊?" : "啪", font, ink, tip.X + 8, tip.Y - 30);
+                    g.DrawString("啪", font, ink, tip.X + 8, tip.Y - 30);
             }
             DrawBubble(g, message, HeadBounds(corners), new RectangleF(-164, -140, 640, 420));
             DrawFooter(g, "暴躁 " + state.AngerLevel + "/6  ·  点击安抚  ·  今日记录 " + dailyCount, Orange, 260);
@@ -337,7 +329,7 @@ namespace XWhip
         static PointF[] ComedyRope(PointF[] physical, WhipPose pose, int variant, double age)
         {
             PointF[] shape = (PointF[])physical.Clone();
-            if (variant != 4 && variant != 6 && variant != 7) return shape;
+            if (variant != 6 && variant != 7) return shape;
             float weight = Ease((age - .58) / .20) * (1 - Ease((age - 1.08) / .22));
             if (weight == 0) return shape;
             for (int i = 2; i < shape.Length; i++)
@@ -355,8 +347,8 @@ namespace XWhip
                 }
                 else
                 {
-                    PointF tip = variant == 6 ? new PointF(385, -20) : new PointF(pose.Hip.X - 15, pose.Hip.Y - 1);
-                    PointF control = variant == 6 ? new PointF(340, -20) : new PointF(311, 254);
+                    PointF tip = new PointF(385, -20);
+                    PointF control = new PointF(340, -20);
                     target = Cubic(root, new PointF(root.X + pose.HandleDirection.X * 65, root.Y + pose.HandleDirection.Y * 65), control, tip, t);
                 }
                 shape[i] = new PointF(shape[i].X + (target.X - shape[i].X) * weight, shape[i].Y + (target.Y - shape[i].Y) * weight);
