@@ -94,7 +94,7 @@ namespace XWhip
                 Size = Math.Max(140, Math.Min(240, source.Size))
             };
 
-            Text = "X / WHIP · 设置";
+            Text = "X了么 · 设置";
             ClientSize = new Size(520, 580);
             AutoScaleMode = AutoScaleMode.None;
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -107,8 +107,8 @@ namespace XWhip
             ForeColor = Ink;
             Font = bodyFont;
 
-            AddLabel("X / WHIP", 28, 18, 420, 45, titleFont, Ink);
-            AddLabel("你的桌角摸鱼搭子", 30, 65, 420, 24, bodyFont, Muted);
+            AddLabel("X了么", 28, 18, 420, 45, titleFont, Ink);
+            AddLabel("十五分钟问一次", 30, 65, 420, 24, bodyFont, Muted);
             Panel divider = new Panel();
             divider.SetBounds(28, 98, 464, 1);
             divider.BackColor = Color.FromArgb(211, 205, 194);

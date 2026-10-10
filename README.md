@@ -1,4 +1,4 @@
-# X / WHIP
+# X了么
 
 上班摸鱼，记得刷 X。
 他催你关注、发帖、回复。你点他一下，留一笔。
@@ -12,7 +12,7 @@
 
 ## 怎么用
 
-安装后打开 X / WHIP。刷过 X，左键点他：今日记录 +1，留下一次手动记录，收鞭，重新冷却。拖动只负责搬家，不记次数。
+安装后打开 X了么。刷过 X，左键点他：今日记录 +1，留下一次手动记录，收鞭，重新冷却。拖动只负责搬家，不记次数。
 
 右键有设置、试抽、重新计时、去 X。卡皮芭拉好友入口和对应台词可在设置里一起关闭。
 
@@ -74,6 +74,6 @@ Windows 自带 .NET Framework 编译器即可编译，无需 NuGet。
 
 main 分支和 PR 自动编译、测试并生成安装包；推送 `v*` 标签自动发布 Release；介绍页使用 GitHub Actions 部署到 Pages。
 
-抽鞭灵感来自 [OpenWhip](https://github.com/GitFrog1111/OpenWhip)。X / WHIP 的动作编排与绳索实现由本项目自行编写，未复制原作源码。
+抽鞭灵感来自 [OpenWhip](https://github.com/GitFrog1111/OpenWhip)。X了么 的动作编排与绳索实现由本项目自行编写，未复制原作源码。
 
 照片出处与表情合成说明见 [PHOTO-CREDITS.md](assets/PHOTO-CREDITS.md)。这是民间桌面小玩具。

@@ -20,9 +20,9 @@ namespace XWhip
             bool owns;
             using (Mutex singleton = new Mutex(true, "Local\\XWhipPetPrototype", out owns))
             {
-                if (!owns) { MessageBox.Show("宠物已经在桌面上了。可在系统托盘找到 X / WHIP。", "X / WHIP"); return; }
+                if (!owns) { MessageBox.Show("宠物已经在桌面上了。可在系统托盘找到 X了么。", "X了么"); return; }
                 try { Application.Run(new PetForm(AppSettings.Load())); }
-                catch (Exception ex) { MessageBox.Show("启动失败：" + ex.Message, "X / WHIP", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                catch (Exception ex) { MessageBox.Show("启动失败：" + ex.Message, "X了么", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
         }
 
@@ -114,7 +114,7 @@ namespace XWhip
                         Point offset = PetRenderer.ActorOffset(demo.Mode, 180);
                         surface.DrawImageUnscaled(frame, (i < 180 || i >= 720 ? (int)previewMotion.X : 290) - offset.X, 280 - offset.Y);
                         using (Font title = new Font("Microsoft YaHei", 15, FontStyle.Bold))
-                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X / WHIP", title, ink, 24, 16);
+                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X了么", title, ink, 24, 16);
                         using (Font label = new Font("Microsoft YaHei", 11))
                         using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString(caption, label, ink, 24, 50);
                         canvas.Save(Path.Combine(framesFolder, i.ToString("0000") + ".png"), ImageFormat.Png);
@@ -140,7 +140,7 @@ namespace XWhip
                         using (Font title = new Font("Microsoft YaHei", 21, FontStyle.Bold))
                         using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString(gagCaptions[scene], title, ink, 30, 28);
                         using (Font label = new Font("Microsoft YaHei", 12))
-                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X / WHIP  ·  一个催你带薪刷 X 的桌面搭子", label, ink, 30, 77);
+                        using (Brush ink = new SolidBrush(PetRenderer.Ink)) surface.DrawString("X了么  ·  一个催你带薪刷 X 的桌面搭子", label, ink, 30, 77);
                         canvas.Save(Path.Combine(gagFrames, (scene * 75 + frameIndex).ToString("0000") + ".png"), ImageFormat.Png);
                     }
                 }
@@ -297,13 +297,13 @@ namespace XWhip
             AddMenu("退出", delegate { Close(); });
             ContextMenuStrip = menu;
             trayIcon = renderer.CreateIcon();
-            tray = new NotifyIcon { Icon = trayIcon, Text = "X / WHIP · 右键设置", ContextMenuStrip = menu, Visible = !testing };
+            tray = new NotifyIcon { Icon = trayIcon, Text = "X了么 · 右键设置", ContextMenuStrip = menu, Visible = !testing };
             tray.DoubleClick += delegate { ShowSettings(); };
             frameTimer.Tick += delegate { PumpOnce(); };
             Shown += delegate
             {
                 Say("左键 +1 · 右键设置 · 拖动搬家", 3); PumpOnce(); frameTimer.Start();
-                if (!testing) { tray.ShowBalloonTip(5000, "X / WHIP 已到岗", "默认 15 分钟冷却。右键宠物可设置时间、试抽、打开 X。", ToolTipIcon.Info); }
+                if (!testing) { tray.ShowBalloonTip(5000, "X了么 已到岗", "默认 15 分钟冷却。右键宠物可设置时间、试抽、打开 X。", ToolTipIcon.Info); }
             };
             Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplayChanged;
         }
@@ -358,7 +358,7 @@ namespace XWhip
         {
             if (progressSaveFailed) return;
             progressSaveFailed = true;
-            if (!testing) MessageBox.Show("本次 +1 已记入，未能保存到磁盘：" + ex.Message, "X / WHIP");
+            if (!testing) MessageBox.Show("本次 +1 已记入，未能保存到磁盘：" + ex.Message, "X了么");
         }
 
         static DateTime BeijingLocal(DateTime utcNow) { return TimeZoneInfo.ConvertTimeFromUtc(utcNow, DailyTimeZone); }
@@ -443,7 +443,7 @@ namespace XWhip
         void OpenPage(string url, string caption)
         {
             try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); Say(caption, 4); }
-            catch (System.ComponentModel.Win32Exception ex) { MessageBox.Show("无法打开浏览器：" + ex.Message, "X / WHIP"); }
+            catch (System.ComponentModel.Win32Exception ex) { MessageBox.Show("无法打开浏览器：" + ex.Message, "X了么"); }
         }
         void ShowSettings()
         {
@@ -472,7 +472,7 @@ namespace XWhip
             }
             finally { configuring = false; }
         }
-        void SaveFailure(Exception ex) { MessageBox.Show("设置本次已生效，但未能保存：" + ex.Message, "X / WHIP"); }
+        void SaveFailure(Exception ex) { MessageBox.Show("设置本次已生效，但未能保存：" + ex.Message, "X了么"); }
         void KeepOnScreen()
         {
             Rectangle area = Screen.FromControl(this).WorkingArea;
