@@ -5,6 +5,7 @@ $taskDist = Join-Path $taskRoot 'dist'
 $taskPortable = Join-Path $taskDist 'XWhip'
 New-Item -ItemType Directory -Path $taskPortable -Force | Out-Null
 Copy-Item -LiteralPath "$taskRoot/build/XWhip.exe","$taskRoot/README.md" -Destination $taskPortable
+Copy-Item -LiteralPath "$taskRoot/build/XWhip.exe" -Destination "$taskDist/XWhip.exe" -Force
 Copy-Item -LiteralPath "$taskRoot/assets/PHOTO-CREDITS.md" -Destination $taskPortable
 Compress-Archive -LiteralPath $taskPortable -DestinationPath "$taskDist/XWhip-Portable-$Version.zip" -Force
 if (-not $Iscc) {

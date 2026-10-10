@@ -6,7 +6,7 @@
 
 一只待在 Windows 桌面上的马斯克大头火柴人，陪你带薪刷 X。默认十五分钟提醒你去 X 看看，别光刷，也记得关注、发帖、回复。到点开始抽鞭，越不理他，场面越不讲道理。
 
-[下载 Windows 安装包 v0.6.1](https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.1.exe) · [便携版 ZIP](https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.6.1.zip) · [进门看看](https://roach01.github.io/x-whip/)
+[下载绿色版 v0.6.2](https://github.com/roach01/x-whip/releases/latest/download/XWhip.exe) · [进门看看](https://roach01.github.io/x-whip/)
 
 ![真人大头抽鞭](docs/assets/rage-levels.png)
 
@@ -58,9 +58,9 @@
 
 ## 安装与更新
 
-v0.6.1 Release 提供 `XWhipSetup-0.6.1.exe` 安装包和 `XWhip-Portable-0.6.1.zip` 免安装包。双击安装包即安装并打开，桌面自动出现「X了么」快捷方式。安装到当前用户目录，无需管理员权限。更新前右键退出旧宠物。
+v0.6.2 的下载是单个 `XWhip.exe`。双击就开，不安装。桌面上还没有「X了么」快捷方式时，打开后会补上。更新前右键退出旧宠物。
 
-设置与每日计数保存在 `%LOCALAPPDATA%\XWhipPet\`，卸载后保留。安装包尚未配置代码签名证书。
+设置与每日计数保存在 `%LOCALAPPDATA%\XWhipPet\`。程序没有代码签名证书，从网页下载后 Windows 仍会提示不安全。
 
 ## 自己编译
 
