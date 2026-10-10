@@ -13,6 +13,11 @@ DefaultDirName={localappdata}\Programs\XWhip
 DefaultGroupName=X了么
 PrivilegesRequired=lowest
 MinVersion=10.0
+DisableWelcomePage=yes
+DisableDirPage=yes
+DisableProgramGroupPage=yes
+DisableReadyPage=yes
+DisableFinishedPage=yes
 OutputBaseFilename=XWhipSetup-{#AppVersion}
 SetupIconFile=..\assets\app.ico
 UninstallDisplayIcon={app}\XWhip.exe
@@ -23,14 +28,18 @@ CloseApplications=yes
 RestartApplications=no
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-[Tasks]
-Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"; Flags: unchecked
 [Files]
 Source: "..\build\XWhip.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\assets\PHOTO-CREDITS.md"; DestDir: "{app}"; Flags: ignoreversion
 [Icons]
 Name: "{group}\X了么"; Filename: "{app}\XWhip.exe"
-Name: "{autodesktop}\X了么"; Filename: "{app}\XWhip.exe"; Tasks: desktopicon
-[Run]
-Filename: "{app}\XWhip.exe"; Description: "打开 X了么"; Flags: nowait postinstall skipifsilent
+Name: "{autodesktop}\X了么"; Filename: "{app}\XWhip.exe"
+[Code]
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  ResultCode: Integer;
+begin
+  if CurStep = ssPostInstall then
+    Exec(ExpandConstant('{app}\XWhip.exe'), '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
+end;

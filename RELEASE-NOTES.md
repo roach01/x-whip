@@ -1,18 +1,11 @@
-# v0.6.0
+# v0.6.1
 
-鞭子只有一根。事故不止一种。
+名字改成 X了么。
 
-这回他会反抽自己、被鞭子拽跳，还能连人带鞭挂到 X 牌上。带薪刷 X 的正事没变：关注、发帖、回复，做完点他一下，手动记一笔。
+双击安装包就装好并打开。桌面自动出现「X了么」快捷方式。直接打开程序时，如果桌面上还没有这个快捷方式，也会补上。
 
-- 八组新动作：后肩甩、弓步横抽、双手劈下、跺脚催促、反抽自己、被鞭子拽跳、被鞭子吊起甩到 X 牌、脚被缠住跳一下。
-- 每抽分为蓄力、甩出、回弹、停顿，身体动作和分段绳同步。单根鞭子保持连续轨迹，真人照片独立轻转、不拉伸。
-- 六级暴躁间隔依次为 3.2、2.8、2.4、2.1、1.8、1.55 秒；点一下立刻收鞭、今日记录 +1，重新冷却。拖动不计数。
-- 默认冷却 15 分钟，可设 1–180 分钟。开着就持续循环。每日总次数在北京时间零点清零，同日重启保留。
-- 新增自行合成的挥鞭风声与短脆啪声，默认静音，可在设置里打开。四至六级的前台窗口短暂轻抖、卡皮芭拉好友推广均可关闭。台词偶尔出现，不常驻挡住人物。
-- 官网聚焦工位试玩与抽鞭演示。关注／发帖／回复小票仅为网页试玩，刷新归零，与桌面版数据独立；无需 X 登录，不自动执行账号操作。
+官网的人物换成按原尺寸重渲的一帧，不再把小图放大。
 
-抽鞭灵感来自 [OpenWhip](https://github.com/GitFrog1111/OpenWhip)。本项目自行实现动作与绳索，未复制原作源码。
-
-Windows 10 / 11：[安装包 XWhipSetup-0.6.0.exe](https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.0.exe) · [便携版 XWhip-Portable-0.6.0.zip](https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.6.0.zip)。
+Windows 10 / 11：[安装包 XWhipSetup-0.6.1.exe](https://github.com/roach01/x-whip/releases/latest/download/XWhipSetup-0.6.1.exe) · [便携版 XWhip-Portable-0.6.1.zip](https://github.com/roach01/x-whip/releases/latest/download/XWhip-Portable-0.6.1.zip)。
 
 更新前右键退出旧宠物。设置与每日计数保存在 `%LOCALAPPDATA%\XWhipPet\`，更新后保留。

@@ -16,6 +16,7 @@ namespace XWhip
         {
             SetProcessDPIAware(); Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
             if (args.Length > 0 && args[0] == "--preview") { Preview(args.Length > 1 ? args[1] : "preview"); return; }
+            if (args.Length > 0 && args[0] == "--poster") { Poster(args.Length > 1 ? args[1] : "poster.png"); return; }
             if (args.Length > 0 && args[0] == "--smoke-test") { Smoke(args.Length > 1 ? args[1] : "smoke.txt"); return; }
             bool owns;
             using (Mutex singleton = new Mutex(true, "Local\\XWhipPetPrototype", out owns))
@@ -151,6 +152,21 @@ namespace XWhip
                 settings.StartPosition = FormStartPosition.Manual; settings.Location = new Point(-10000, -10000);
                 settings.Show(); Application.DoEvents();
                 settings.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size)); bitmap.Save(Path.Combine(folder, "settings.png")); settings.Close();
+            }
+        }
+
+        static void Poster(string path)
+        {
+            DateTime start = new DateTime(2026, 10, 9, 0, 0, 0, DateTimeKind.Utc);
+            PetState pose = PreviewStrike(4, start);
+            const int size = 360;
+            using (PetRenderer renderer = new PetRenderer())
+            {
+                int frames = (int)Math.Round(.90 * 120);
+                for (int i = 0; i < frames; i++)
+                    using (Bitmap frame = renderer.Render(pose, start, i / 120.0, i / 120.0, null, false, size)) { }
+                using (Bitmap frame = renderer.Render(pose, start, .90, .90, "今天发帖到200了吗？", false, size, false, 1, 0, 7))
+                    frame.Save(path, ImageFormat.Png);
             }
         }
 
@@ -303,7 +319,7 @@ namespace XWhip
             Shown += delegate
             {
                 Say("左键 +1 · 右键设置 · 拖动搬家", 3); PumpOnce(); frameTimer.Start();
-                if (!testing) { tray.ShowBalloonTip(5000, "X了么 已到岗", "默认 15 分钟冷却。右键宠物可设置时间、试抽、打开 X。", ToolTipIcon.Info); }
+                if (!testing) { EnsureDesktopShortcut(); tray.ShowBalloonTip(5000, "X了么 已到岗", "默认 15 分钟冷却。右键宠物可设置时间、试抽、打开 X。", ToolTipIcon.Info); }
             };
             Microsoft.Win32.SystemEvents.DisplaySettingsChanged += DisplayChanged;
         }
@@ -315,6 +331,29 @@ namespace XWhip
         {
             if (m.Msg == 0x21) { m.Result = new IntPtr(3); return; }
             base.WndProc(ref m);
+        }
+
+        static void EnsureDesktopShortcut()
+        {
+            try
+            {
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                if (String.IsNullOrEmpty(desktop)) return;
+                string link = Path.Combine(desktop, "X了么.lnk");
+                if (File.Exists(link)) return;
+                string exe = Application.ExecutablePath;
+                Type shellType = Type.GetTypeFromProgID("WScript.Shell");
+                if (shellType == null) return;
+                object shell = Activator.CreateInstance(shellType);
+                object shortcut = shellType.InvokeMember("CreateShortcut", System.Reflection.BindingFlags.InvokeMethod, null, shell, new object[] { link });
+                Type shortcutType = shortcut.GetType();
+                System.Reflection.BindingFlags set = System.Reflection.BindingFlags.SetProperty;
+                shortcutType.InvokeMember("TargetPath", set, null, shortcut, new object[] { exe });
+                shortcutType.InvokeMember("WorkingDirectory", set, null, shortcut, new object[] { Path.GetDirectoryName(exe) });
+                shortcutType.InvokeMember("Description", set, null, shortcut, new object[] { "X了么" });
+                shortcutType.InvokeMember("Save", System.Reflection.BindingFlags.InvokeMethod, null, shortcut, null);
+            }
+            catch (Exception) { }
         }
 
         ToolStripMenuItem AddMenu(string label, Action action)
