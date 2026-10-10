@@ -263,6 +263,8 @@ namespace XWhip
         readonly PetRenderer renderer = new PetRenderer();
         readonly WhipSound whipSound = new WhipSound();
         readonly System.Windows.Forms.Timer frameTimer = new System.Windows.Forms.Timer { Interval = 33 };
+        readonly System.Windows.Forms.Timer menuWatch = new System.Windows.Forms.Timer { Interval = 50 };
+        bool menuClickArmed;
         readonly Stopwatch clock = Stopwatch.StartNew();
         readonly NotifyIcon tray;
         readonly Icon trayIcon;
@@ -306,12 +308,18 @@ namespace XWhip
             friendLink.Visible = settings.PromotionEnabled;
             AddMenu("完成一次互动 ✓", delegate { Complete(); });
             menu.Items.Add(new ToolStripSeparator());
+            AddMenu("放大", delegate { NudgeSize(20); });
+            AddMenu("缩小", delegate { NudgeSize(-20); });
+            menu.Items.Add(new ToolStripSeparator());
             AddMenu("重新计时", delegate { Calm("重新计时，先放你一马。"); });
             AddMenu("试抽一次", delegate { TriggerTest(); });
             menu.Items.Add(new ToolStripSeparator());
             AddMenu("设置…", delegate { ShowSettings(); });
             AddMenu("退出", delegate { Close(); });
             ContextMenuStrip = menu;
+            menu.Opened += delegate { menuClickArmed = false; menuWatch.Start(); };
+            menu.Closed += delegate { menuWatch.Stop(); };
+            menuWatch.Tick += delegate { WatchMenu(); };
             trayIcon = renderer.CreateIcon();
             tray = new NotifyIcon { Icon = trayIcon, Text = "X了么 · 右键设置", ContextMenuStrip = menu, Visible = !testing };
             tray.DoubleClick += delegate { ShowSettings(); };
@@ -354,6 +362,27 @@ namespace XWhip
                 shortcutType.InvokeMember("Save", System.Reflection.BindingFlags.InvokeMethod, null, shortcut, null);
             }
             catch (Exception) { }
+        }
+
+        void WatchMenu()
+        {
+            if (!menu.Visible) { menuWatch.Stop(); return; }
+            if (Control.MouseButtons == MouseButtons.None) menuClickArmed = true;
+            else if (menuClickArmed && !menu.Bounds.Contains(Cursor.Position))
+                menu.Close(ToolStripDropDownCloseReason.AppClicked);
+        }
+
+        void NudgeSize(int delta)
+        {
+            int next = Math.Max(AppSettings.MinSize, Math.Min(AppSettings.MaxSize, settings.Size + delta));
+            if (next == settings.Size) return;
+            settings.Size = next;
+            ResizePet();
+            KeepOnScreen();
+            try { settings.Save(); }
+            catch (IOException ex) { SaveFailure(ex); }
+            catch (UnauthorizedAccessException ex) { SaveFailure(ex); }
+            catch (InvalidOperationException ex) { SaveFailure(ex); }
         }
 
         ToolStripMenuItem AddMenu(string label, Action action)
@@ -525,7 +554,7 @@ namespace XWhip
             if (disposing)
             {
                 Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= DisplayChanged;
-                frameTimer.Dispose(); shake.Dispose(); tray.Visible = false; tray.Dispose(); trayIcon.Dispose(); menu.Font.Dispose(); menu.Dispose(); renderer.Dispose(); whipSound.Dispose();
+                frameTimer.Dispose(); menuWatch.Dispose(); shake.Dispose(); tray.Visible = false; tray.Dispose(); trayIcon.Dispose(); menu.Font.Dispose(); menu.Dispose(); renderer.Dispose(); whipSound.Dispose();
             }
             base.Dispose(disposing);
         }

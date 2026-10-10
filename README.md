@@ -6,7 +6,7 @@
 
 一只待在 Windows 桌面上的马斯克大头火柴人，陪你带薪刷 X。默认十五分钟提醒你去 X 看看，别光刷，也记得关注、发帖、回复。到点开始抽鞭，越不理他，场面越不讲道理。
 
-[下载绿色版 v0.6.3](https://github.com/roach01/x-whip/releases/latest/download/XWhip.exe) · [进门看看](https://roach01.github.io/x-whip/)
+[下载绿色版 v0.6.4](https://github.com/roach01/x-whip/releases/latest/download/XWhip.exe) · [进门看看](https://roach01.github.io/x-whip/)
 
 ![真人大头抽鞭](docs/assets/rage-levels.png)
 

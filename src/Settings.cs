@@ -13,7 +13,9 @@ namespace XWhip
         public bool Sound = false;
         public bool Roam = true;
         public bool ScreenShakeEnabled = true;
-        public bool PromotionEnabled = true;
+        public const int MinSize = 100;
+        public const int MaxSize = 320;
+        public bool PromotionEnabled = false;
         public int Size = 180;
 
         private static string SettingsPath
@@ -57,7 +59,7 @@ namespace XWhip
         private void Clamp()
         {
             IntervalMinutes = Math.Max(1, Math.Min(180, IntervalMinutes));
-            Size = Math.Max(140, Math.Min(240, Size));
+            Size = Math.Max(MinSize, Math.Min(MaxSize, Size));
         }
     }
 
@@ -91,7 +93,7 @@ namespace XWhip
                 Roam = source.Roam,
                 ScreenShakeEnabled = source.ScreenShakeEnabled,
                 PromotionEnabled = source.PromotionEnabled,
-                Size = Math.Max(140, Math.Min(240, source.Size))
+                Size = Math.Max(AppSettings.MinSize, Math.Min(AppSettings.MaxSize, source.Size))
             };
 
             Text = "X了么 · 设置";
@@ -150,8 +152,8 @@ namespace XWhip
             sizeValue.TextAlign = ContentAlignment.MiddleRight;
             sizeSlider = new TrackBar();
             sizeSlider.SetBounds(20, 404, 480, 33);
-            sizeSlider.Minimum = 140;
-            sizeSlider.Maximum = 240;
+            sizeSlider.Minimum = AppSettings.MinSize;
+            sizeSlider.Maximum = AppSettings.MaxSize;
             sizeSlider.TickFrequency = 20;
             sizeSlider.SmallChange = 10;
             sizeSlider.LargeChange = 20;

@@ -1,8 +1,8 @@
-# v0.6.3
+# v0.6.4
 
-越抽越快还在。抽到自己的那一下去掉了，鞭子只往外抽。
+右键菜单点到别处会收起。菜单里可以直接放大、缩小，范围 100 到 320。
 
-下载仍是绿色版：一个 `XWhip.exe`，双击就开。
+卡皮芭拉好友推广默认关闭。
 
 Windows 10 / 11：[XWhip.exe](https://github.com/roach01/x-whip/releases/latest/download/XWhip.exe)。
 
